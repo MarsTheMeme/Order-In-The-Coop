@@ -81,6 +81,10 @@
   font-weight: bold;
 }
 
+.calendar-days .calendar-day.day-active.has-events {
+  color: hsl(var(--primary-foreground));
+}
+
 .calendar-days .calendar-day.day-active.has-events::before {
   background: hsl(var(--primary-foreground));
 }
