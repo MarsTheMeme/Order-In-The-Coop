@@ -68,17 +68,25 @@ Preferred communication style: Simple, everyday language.
 - JSON body parsing with raw body preservation for verification
 
 **File Processing Pipeline:**
-1. Multer receives uploaded files in memory
-2. Text extraction based on file type (PDF via pdf-parse, DOCX via mammoth, plain text)
-3. Extracted text sent to Gemini AI for analysis
-4. Structured response parsed and stored in database
-5. File metadata saved to local filesystem storage
+1. User selects files via drag-and-drop or file browser in FileUploadZone dialog
+2. User optionally provides specific analysis instructions (e.g., "focus on finding all critical dates")
+3. User clicks "Analyze Documents" button to initiate upload
+4. Multer receives uploaded files in memory along with optional userInstructions parameter
+5. Text extraction based on file type (PDF via pdf-parse, DOCX via mammoth, plain text)
+6. User instructions (if provided) are incorporated into the AI prompt with clear delimiter
+7. Extracted text sent to Gemini AI for contextual analysis
+8. Structured response parsed and stored in database
+9. File metadata saved to local filesystem storage
+10. Chat message records both uploaded filename and user instructions
 
 **AI Integration:**
 - Google Gemini AI (@google/genai) for document analysis
+- Context-aware prompts that incorporate optional user instructions
+- When user provides instructions, AI prompt includes "USER'S SPECIFIC INSTRUCTIONS" section to guide analysis
 - Structured prompts requesting specific legal information extraction
 - JSON response format for case numbers, parties, deadlines, facts, and suggested actions
 - Confidence scoring for extracted data
+- Falls back to standard generic analysis when no instructions provided
 
 ### Data Storage
 
