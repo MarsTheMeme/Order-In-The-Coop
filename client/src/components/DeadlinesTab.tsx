@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar } from "@/components/ui/calendar";
+import { CustomCalendar } from "./CustomCalendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,31 +18,21 @@ type Deadline = {
 };
 
 export function DeadlinesTab() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const { data: deadlines = [], isLoading } = useQuery<Deadline[]>({
     queryKey: ["/api/deadlines"],
   });
 
-  const deadlineDates = deadlines.map((d) => {
+  const selectedDateDeadlines = deadlines.filter((d) => {
     try {
-      return parseISO(d.date);
+      const deadlineDate = parseISO(d.date);
+      return isSameDay(deadlineDate, selectedDate);
     } catch {
-      return new Date(d.date);
+      const deadlineDate = new Date(d.date);
+      return isSameDay(deadlineDate, selectedDate);
     }
   });
-
-  const selectedDateDeadlines = selectedDate
-    ? deadlines.filter((d) => {
-        try {
-          const deadlineDate = parseISO(d.date);
-          return isSameDay(deadlineDate, selectedDate);
-        } catch {
-          const deadlineDate = new Date(d.date);
-          return isSameDay(deadlineDate, selectedDate);
-        }
-      })
-    : [];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -75,22 +65,10 @@ export function DeadlinesTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border"
-            modifiers={{
-              hasDeadline: deadlineDates,
-            }}
-            modifiersStyles={{
-              hasDeadline: {
-                fontWeight: "bold",
-                textDecoration: "underline",
-                color: "hsl(var(--primary))",
-              },
-            }}
-            data-testid="calendar"
+          <CustomCalendar
+            deadlines={deadlines}
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
           />
         </CardContent>
       </Card>

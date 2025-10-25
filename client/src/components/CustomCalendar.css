@@ -1,0 +1,125 @@
+.custom-calendar-wrapper {
+  width: 100%;
+  max-width: 21rem;
+  margin: 0 auto;
+}
+
+.calendar-month {
+  margin: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+}
+
+.calendar-month .month-active {
+  display: inline-block;
+  padding: 0.5rem;
+}
+
+.calendar-month .month-selector {
+  display: inline-block;
+  padding: 0.5rem;
+}
+
+.calendar-month .month-selector a {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calendar-month .month-selector a:hover {
+  color: hsl(var(--primary));
+}
+
+.calendar-weekdays,
+.calendar-days {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.calendar-weekdays .calendar-day,
+.calendar-days .calendar-day {
+  width: 3rem;
+  height: 3rem;
+  line-height: 3rem;
+  text-align: center;
+}
+
+.calendar-days {
+  border-top: 0.1rem solid hsl(var(--border));
+  border-bottom: 0.1rem solid hsl(var(--border));
+}
+
+.calendar-days .calendar-day {
+  position: relative;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out, background 0.2s ease-in-out;
+  border-radius: 0.25rem;
+}
+
+.calendar-days .calendar-day:not(.day-empty):not(.day-active):hover {
+  color: hsl(var(--primary));
+  background: hsl(var(--accent));
+}
+
+.calendar-days .calendar-day.day-active {
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+  font-weight: bold;
+}
+
+.calendar-days .calendar-day.day-active.has-events::before {
+  background: hsl(var(--primary-foreground));
+}
+
+.calendar-days .calendar-day.day-empty {
+  cursor: initial;
+}
+
+.calendar-days .calendar-day.has-events::before {
+  content: "";
+  position: absolute;
+  display: block;
+  top: 0.40rem;
+  left: 0.40rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+}
+
+.calendar-days .calendar-day.has-events {
+  font-weight: 600;
+  text-decoration: underline;
+  color: hsl(var(--primary));
+}
+
+@media only screen and (max-width: 32.0rem) {
+  .custom-calendar-wrapper {
+    width: 100%;
+  }
+  
+  .calendar-days .calendar-day,
+  .calendar-weekdays .calendar-day {
+    font-size: 4.5vw;
+    width: 12.5vw;
+    height: 12.5vw;
+    line-height: 12.5vw;
+  }
+  
+  .calendar-days .calendar-day.has-events::before {
+    top: 1.5vw;
+    left: 1.5vw;
+    width: 1.5vw;
+    height: 1.5vw;
+  }
+}
