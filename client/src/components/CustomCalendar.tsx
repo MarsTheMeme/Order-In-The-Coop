@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { parseISO, isSameDay } from "date-fns";
 import "./CustomCalendar.css";
 
 interface Deadline {
@@ -85,10 +86,15 @@ export function CustomCalendar({ deadlines, onDateSelect, selectedDate }: Custom
 
   // Check if a date has deadlines
   const hasDeadlines = (day: number): boolean => {
-    const dateStr = formatDate(day, currentMonth, currentYear);
+    const cellDate = new Date(currentYear, currentMonth, day);
     return deadlines.some(deadline => {
-      const deadlineDate = new Date(deadline.date);
-      return formatDate(deadlineDate.getDate(), deadlineDate.getMonth(), deadlineDate.getFullYear()) === dateStr;
+      try {
+        const deadlineDate = parseISO(deadline.date);
+        return isSameDay(deadlineDate, cellDate);
+      } catch {
+        const deadlineDate = new Date(deadline.date);
+        return isSameDay(deadlineDate, cellDate);
+      }
     });
   };
 
