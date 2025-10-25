@@ -18,6 +18,7 @@ import multer from "multer";
 import { analyzeDocument, chatWithTender } from "./gemini";
 import { uploadFile, getFileUrl, deleteFile } from "./objectStorage";
 import mammoth from "mammoth";
+import * as XLSX from "xlsx";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -40,6 +41,29 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   ) {
     const result = await mammoth.extractRawText({ buffer: file.buffer });
     return result.value;
+  } else if (
+    fileType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    fileType === "application/vnd.ms-excel" ||
+    fileType === "text/csv"
+  ) {
+    try {
+      const workbook = XLSX.read(file.buffer, { type: "buffer" });
+      let textOutput = "";
+      
+      workbook.SheetNames.forEach((sheetName, index) => {
+        const worksheet = workbook.Sheets[sheetName];
+        if (index > 0) textOutput += "\n\n";
+        textOutput += `=== Sheet: ${sheetName} ===\n`;
+        
+        const csvData = XLSX.utils.sheet_to_csv(worksheet);
+        textOutput += csvData;
+      });
+      
+      return textOutput;
+    } catch (error) {
+      console.error("Excel/CSV parsing error:", error);
+      throw new Error("Failed to parse Excel/CSV file");
+    }
   } else if (fileType.startsWith("text/")) {
     return file.buffer.toString("utf-8");
   } else {

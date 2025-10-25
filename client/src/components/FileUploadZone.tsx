@@ -19,7 +19,7 @@ interface FileUploadZoneProps {
   accept?: string;
 }
 
-export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png,.jpg,.jpeg" }: FileUploadZoneProps) {
+export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.xls,.csv" }: FileUploadZoneProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [userInstructions, setUserInstructions] = useState("");
@@ -83,6 +83,7 @@ export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png
   const getFileIcon = (type: string) => {
     if (type.includes("pdf")) return "📄";
     if (type.includes("word") || type.includes("docx")) return "📝";
+    if (type.includes("spreadsheet") || type.includes("excel") || type.includes("csv")) return "📊";
     if (type.includes("image")) return "🖼️";
     return "📎";
   };
@@ -106,7 +107,7 @@ export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png
           </div>
           <h3 className="text-base font-medium mb-1">Drop files here or click to upload</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Support for PDF, DOCX, TXT, and image files
+            Support for PDF, DOCX, TXT, Excel, CSV, and image files
           </p>
           <Button variant="secondary" size="sm" data-testid="button-browse">
             Browse Files
