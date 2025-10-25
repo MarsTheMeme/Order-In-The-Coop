@@ -81,8 +81,14 @@
   font-weight: bold;
 }
 
+.calendar-days .calendar-day.day-active.has-events {
+  background: transparent;
+  color: white;
+  font-weight: bold;
+}
+
 .calendar-days .calendar-day.day-active.has-events::before {
-  background: hsl(var(--primary-foreground));
+  background: white;
 }
 
 .calendar-days .calendar-day.day-empty {
