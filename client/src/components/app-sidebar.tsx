@@ -127,7 +127,7 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
             <ScrollArea className="h-[400px]">
               <SidebarMenu>
                 {filteredCases.map((caseItem) => (
-                  <SidebarMenuItem key={caseItem.id} className="group/item relative">
+                  <SidebarMenuItem key={caseItem.id} className="group/item">
                     <SidebarMenuButton
                       isActive={activeCase === caseItem.id}
                       onClick={() => onCaseSelect(caseItem.id)}
@@ -144,26 +144,28 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 w-full text-xs text-muted-foreground mt-1">
-                        <span className="font-mono">
-                          {highlightMatch(caseItem.caseNumber, searchQuery)}
-                        </span>
-                        <span>{caseItem.documentCount} docs</span>
+                      <div className="flex items-center justify-between w-full gap-3 text-xs text-muted-foreground mt-1">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono">
+                            {highlightMatch(caseItem.caseNumber, searchQuery)}
+                          </span>
+                          <span>{caseItem.documentCount} docs</span>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2 flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCaseToDelete(caseItem);
+                            setDeleteDialogOpen(true);
+                          }}
+                          data-testid={`button-delete-case-${caseItem.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </Button>
                       </div>
                     </SidebarMenuButton>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCaseToDelete(caseItem);
-                        setDeleteDialogOpen(true);
-                      }}
-                      data-testid={`button-delete-case-${caseItem.id}`}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
