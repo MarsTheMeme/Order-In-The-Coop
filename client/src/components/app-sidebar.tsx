@@ -1,4 +1,4 @@
-import { FileText, MessageSquare, CheckSquare, Clock, Settings, Plus } from "lucide-react";
+import { Settings, Plus } from "lucide-react";
 import chickenLogo from "@assets/image_1761371205289.png";
 import {
   Sidebar,
@@ -32,29 +32,6 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSidebarProps) {
-  const menuItems = [
-    {
-      title: "Chat",
-      icon: MessageSquare,
-      id: "chat",
-    },
-    {
-      title: "Documents",
-      icon: FileText,
-      id: "documents",
-    },
-    {
-      title: "Approvals",
-      icon: CheckSquare,
-      id: "approvals",
-    },
-    {
-      title: "Deadlines",
-      icon: Clock,
-      id: "deadlines",
-    },
-  ];
-
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -68,22 +45,6 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton data-testid={`link-${item.id}`}>
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         <SidebarGroup>
           <div className="flex items-center justify-between px-2">
             <SidebarGroupLabel>Active Cases</SidebarGroupLabel>

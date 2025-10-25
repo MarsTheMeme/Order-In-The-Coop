@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ChatPageProps {
   caseId: number;
+  caseName: string;
 }
 
 interface AttachedDocument {
@@ -29,7 +30,7 @@ interface AttachedDocument {
   name: string;
 }
 
-export default function ChatPage({ caseId }: ChatPageProps) {
+export default function ChatPage({ caseId, caseName }: ChatPageProps) {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [attachedDocuments, setAttachedDocuments] = useState<AttachedDocument[]>([]);
   const { toast } = useToast();
@@ -172,7 +173,7 @@ export default function ChatPage({ caseId }: ChatPageProps) {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">Tender - Your Legal Assistant</h1>
-            <p className="text-sm text-muted-foreground">Johnson v. MegaCorp</p>
+            <p className="text-sm text-muted-foreground" data-testid="text-case-name">{caseName}</p>
           </div>
           <Button
             onClick={() => setShowUploadDialog(true)}

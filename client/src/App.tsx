@@ -10,11 +10,17 @@ import ChatPage from "@/pages/ChatPage";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 
-function Router({ activeCaseId }: { activeCaseId: string }) {
+function Router({ 
+  activeCaseId, 
+  caseName 
+}: { 
+  activeCaseId: string;
+  caseName: string;
+}) {
   return (
     <Switch>
       <Route path="/">
-        {() => <ChatPage caseId={parseInt(activeCaseId)} />}
+        {() => <ChatPage caseId={parseInt(activeCaseId)} caseName={caseName} />}
       </Route>
       <Route component={NotFound} />
     </Switch>
@@ -35,6 +41,9 @@ function AppContent() {
   >({
     queryKey: ["/api/cases"],
   });
+
+  const currentCase = cases.find(c => c.id === activeCase);
+  const caseName = currentCase?.name || "Loading...";
 
   const style = {
     "--sidebar-width": "20rem",
@@ -57,7 +66,7 @@ function AppContent() {
               <ThemeToggle />
             </header>
             <main className="flex-1 overflow-hidden">
-              <Router activeCaseId={activeCase || "1"} />
+              <Router activeCaseId={activeCase || "1"} caseName={caseName} />
             </main>
           </div>
         </div>
