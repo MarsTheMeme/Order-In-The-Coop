@@ -86,6 +86,7 @@ Preferred communication style: Simple, everyday language.
 - Structured prompts requesting specific legal information extraction
 - JSON response format for case numbers, parties, deadlines, facts, and suggested actions
 - Confidence scoring for extracted data
+- **Conversational Responses**: When user provides specific instructions (e.g., "extract party names"), AI generates a second conversational response that directly addresses the user's request in the Chat tab, making the interaction more helpful and personalized
 - Falls back to standard generic analysis when no instructions provided
 
 ### Data Storage
