@@ -27,9 +27,14 @@ export interface DocumentAnalysis {
 
 export async function analyzeDocument(
   documentText: string,
-  fileName: string
+  fileName: string,
+  userInstructions?: string
 ): Promise<DocumentAnalysis> {
-  const prompt = `You are Tender, an AI legal assistant helping plaintiff legal teams process case documents. 
+  const instructionsSection = userInstructions 
+    ? `\n\nUSER'S SPECIFIC INSTRUCTIONS: ${userInstructions}\nPay special attention to these instructions while analyzing the document. Tailor your extraction and suggested actions to address what the user is asking for.\n`
+    : '';
+
+  const prompt = `You are Tender, an AI legal assistant helping plaintiff legal teams process case documents.${instructionsSection}
 
 Analyze the following legal document and extract:
 

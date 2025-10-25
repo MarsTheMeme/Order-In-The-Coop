@@ -3,22 +3,26 @@ import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface UploadedFile {
   id: string;
+  file: File;
   name: string;
   size: number;
   type: string;
 }
 
 interface FileUploadZoneProps {
-  onFilesSelected: (files: File[]) => void;
+  onFilesSelected: (files: File[], userInstructions?: string) => void;
   accept?: string;
 }
 
 export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png,.jpg,.jpeg" }: FileUploadZoneProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [userInstructions, setUserInstructions] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -47,13 +51,23 @@ export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png
   const handleFiles = (files: File[]) => {
     const newFiles = files.map((file) => ({
       id: Math.random().toString(36).substring(7),
+      file,
       name: file.name,
       size: file.size,
       type: file.type,
     }));
     
     setUploadedFiles((prev) => [...prev, ...newFiles]);
-    onFilesSelected(files);
+  };
+
+  const handleAnalyze = () => {
+    const filesToUpload = uploadedFiles.map(uf => uf.file);
+    
+    if (filesToUpload.length > 0) {
+      onFilesSelected(filesToUpload, userInstructions.trim() || undefined);
+      setUploadedFiles([]);
+      setUserInstructions("");
+    }
   };
 
   const removeFile = (id: string) => {
@@ -111,38 +125,65 @@ export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png
       />
 
       {uploadedFiles.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium">Uploaded Files</h4>
-          {uploadedFiles.map((file) => (
-            <Card key={file.id} className="p-3" data-testid={`file-item-${file.id}`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-xl">{getFileIcon(file.type)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{formatFileSize(file.size)}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        Processing
-                      </Badge>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Selected Files</h4>
+            {uploadedFiles.map((file) => (
+              <Card key={file.id} className="p-3" data-testid={`file-item-${file.id}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-xl">{getFileIcon(file.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{file.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{formatFileSize(file.size)}</span>
+                        <Badge variant="secondary" className="text-xs">
+                          Ready
+                        </Badge>
+                      </div>
                     </div>
                   </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile(file.id);
+                    }}
+                    data-testid={`button-remove-${file.id}`}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFile(file.id);
-                  }}
-                  data-testid={`button-remove-${file.id}`}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="instructions" className="text-sm font-medium">
+              Analysis Instructions (Optional)
+            </Label>
+            <Textarea
+              id="instructions"
+              placeholder="E.g., 'Focus on finding important dates and deadlines' or 'Look for party names and contact information'"
+              value={userInstructions}
+              onChange={(e) => setUserInstructions(e.target.value)}
+              className="resize-none h-20"
+              data-testid="textarea-instructions"
+            />
+            <p className="text-xs text-muted-foreground">
+              Tell Tender what to focus on during analysis
+            </p>
+          </div>
+
+          <Button 
+            onClick={handleAnalyze} 
+            className="w-full"
+            data-testid="button-analyze"
+          >
+            Analyze Documents
+          </Button>
         </div>
       )}
     </div>

@@ -98,9 +98,12 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
   });
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, userInstructions }: { file: File; userInstructions?: string }) => {
       const formData = new FormData();
       formData.append("file", file);
+      if (userInstructions && userInstructions.trim()) {
+        formData.append("userInstructions", userInstructions.trim());
+      }
 
       const response = await fetch(`/api/cases/${caseId}/documents`, {
         method: "POST",
@@ -113,19 +116,21 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
 
       return response.json();
     },
-    onSuccess: (data, file) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "extracted-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
       
       setAttachedDocuments(prev => [...prev, {
         id: data.document?.id?.toString() || Date.now().toString(),
-        name: file.name
+        name: variables.file.name
       }]);
       
       toast({
-        title: "Document attached",
-        description: "You can now ask questions about this document.",
+        title: "Document analyzed",
+        description: variables.userInstructions 
+          ? "Analysis completed with your instructions."
+          : "You can now ask questions about this document.",
       });
     },
     onError: (error: Error) => {
@@ -168,10 +173,10 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
     sendMessageMutation.mutate(message);
   };
 
-  const handleFilesSelected = (files: File[]) => {
+  const handleFilesSelected = (files: File[], userInstructions?: string) => {
     setShowUploadDialog(false);
     files.forEach((file) => {
-      uploadDocumentMutation.mutate(file);
+      uploadDocumentMutation.mutate({ file, userInstructions });
     });
   };
 

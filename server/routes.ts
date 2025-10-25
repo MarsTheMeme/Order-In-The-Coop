@@ -172,6 +172,8 @@ export function registerRoutes(app: Express): Server {
           return res.status(400).json({ error: "No file uploaded" });
         }
 
+        const userInstructions = req.body.userInstructions?.trim() || undefined;
+
         const fileUrl = await uploadFile(req.file);
 
         const [document] = await db
@@ -185,12 +187,16 @@ export function registerRoutes(app: Express): Server {
           })
           .returning();
 
+        const uploadMessage = userInstructions
+          ? `Uploaded document: ${req.file.originalname}\nInstructions: ${userInstructions}`
+          : `Uploaded document: ${req.file.originalname}`;
+
         await db
           .insert(chatMessages)
           .values({
             caseId,
             role: "user",
-            content: `Uploaded document: ${req.file.originalname}`,
+            content: uploadMessage,
             isAnalysis: false,
           });
 
@@ -202,7 +208,7 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-        const analysis = await analyzeDocument(documentText, req.file.originalname);
+        const analysis = await analyzeDocument(documentText, req.file.originalname, userInstructions);
 
         const [extracted] = await db
           .insert(extractedData)
