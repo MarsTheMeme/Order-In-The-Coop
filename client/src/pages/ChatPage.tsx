@@ -23,8 +23,14 @@ interface ChatPageProps {
   caseId: number;
 }
 
+interface AttachedDocument {
+  id: string;
+  name: string;
+}
+
 export default function ChatPage({ caseId }: ChatPageProps) {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [attachedDocuments, setAttachedDocuments] = useState<AttachedDocument[]>([]);
   const { toast } = useToast();
 
   const { data: messages = [], isLoading: messagesLoading } = useQuery<ChatMessageProps[]>({
@@ -76,13 +82,19 @@ export default function ChatPage({ caseId }: ChatPageProps) {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, file) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "extracted-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
+      
+      setAttachedDocuments(prev => [...prev, {
+        id: data.document?.id?.toString() || Date.now().toString(),
+        name: file.name
+      }]);
+      
       toast({
-        title: "Document analyzed",
-        description: "Tender has finished analyzing your document.",
+        title: "Document attached",
+        description: "You can now ask questions about this document.",
       });
     },
     onError: (error: Error) => {
@@ -112,6 +124,14 @@ export default function ChatPage({ caseId }: ChatPageProps) {
     files.forEach((file) => {
       uploadDocumentMutation.mutate(file);
     });
+  };
+
+  const handleAttachDocument = () => {
+    setShowUploadDialog(true);
+  };
+
+  const handleRemoveDocument = (id: string) => {
+    setAttachedDocuments(prev => prev.filter(doc => doc.id !== id));
   };
 
   const handleApprove = (id: string) => {
@@ -166,6 +186,9 @@ export default function ChatPage({ caseId }: ChatPageProps) {
           messages={messages}
           onSendMessage={handleSendMessage}
           isProcessing={sendMessageMutation.isPending || uploadDocumentMutation.isPending}
+          attachedDocuments={attachedDocuments}
+          onAttachDocument={handleAttachDocument}
+          onRemoveDocument={handleRemoveDocument}
         />
       </div>
 

@@ -1,0 +1,7 @@
+PHONE TRANSCRIPT
+  Date: January 15, 2025
+  PLAINTIFF: How many times did I ask you about the money order to John Smith?
+  DEFENDANT: I don't recall.
+  PLAINTIFF: I asked you about the money order to John Smith.
+  DEFENDANT: Maybe.
+  PLAINTIFF: Can you confirm the money order to John Smith?
