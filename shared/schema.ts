@@ -12,7 +12,7 @@ export const cases = pgTable("cases", {
 
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  caseId: integer("case_id").notNull().references(() => cases.id),
+  caseId: integer("case_id").notNull().references(() => cases.id, { onDelete: "cascade" }),
   fileName: text("file_name").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull(),
@@ -22,7 +22,7 @@ export const documents = pgTable("documents", {
 
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
-  caseId: integer("case_id").notNull().references(() => cases.id),
+  caseId: integer("case_id").notNull().references(() => cases.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
   content: text("content").notNull(),
   isAnalysis: boolean("is_analysis").default(false),
@@ -31,7 +31,7 @@ export const chatMessages = pgTable("chat_messages", {
 
 export const extractedData = pgTable("extracted_data", {
   id: serial("id").primaryKey(),
-  documentId: integer("document_id").notNull().references(() => documents.id),
+  documentId: integer("document_id").notNull().references(() => documents.id, { onDelete: "cascade" }),
   caseNumber: text("case_number"),
   parties: jsonb("parties").$type<string[]>(),
   deadlines: jsonb("deadlines").$type<Array<{ date: string; description: string; priority: "high" | "medium" | "low" }>>(),
@@ -42,7 +42,7 @@ export const extractedData = pgTable("extracted_data", {
 
 export const suggestedActions = pgTable("suggested_actions", {
   id: serial("id").primaryKey(),
-  extractedDataId: integer("extracted_data_id").notNull().references(() => extractedData.id),
+  extractedDataId: integer("extracted_data_id").notNull().references(() => extractedData.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description").notNull(),
   rationale: text("rationale").notNull(),

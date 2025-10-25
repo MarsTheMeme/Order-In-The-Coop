@@ -16,7 +16,7 @@ import {
 import { eq, desc } from "drizzle-orm";
 import multer from "multer";
 import { analyzeDocument, chatWithTender } from "./gemini";
-import { uploadFile, getFileUrl } from "./objectStorage";
+import { uploadFile, getFileUrl, deleteFile } from "./objectStorage";
 import mammoth from "mammoth";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -93,6 +93,27 @@ export function registerRoutes(app: Express): Server {
     } catch (error: any) {
       console.error("Error creating case:", error);
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/cases/:id", async (req: Request, res: Response) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      
+      const caseDocuments = await db
+        .select()
+        .from(documents)
+        .where(eq(documents.caseId, caseId));
+      
+      for (const doc of caseDocuments) {
+        await deleteFile(doc.storageUrl);
+      }
+      
+      await db.delete(cases).where(eq(cases.id, caseId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting case:", error);
+      res.status(500).json({ error: error.message });
     }
   });
 

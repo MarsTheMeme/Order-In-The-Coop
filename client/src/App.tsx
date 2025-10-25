@@ -1,6 +1,6 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "./lib/queryClient";
+import { QueryClientProvider, useQuery, useMutation } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,15 +8,35 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import ChatPage from "@/pages/ChatPage";
 import NotFound from "@/pages/not-found";
-import { useState } from "react";
+import { NewCaseDialog } from "@/components/NewCaseDialog";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 function Router({ 
   activeCaseId, 
-  caseName 
+  caseName,
+  hasNoCases
 }: { 
-  activeCaseId: string;
+  activeCaseId: string | null;
   caseName: string;
+  hasNoCases: boolean;
 }) {
+  if (hasNoCases) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
+        <div className="text-6xl">📋</div>
+        <h2 className="text-2xl font-semibold">No Cases Yet</h2>
+        <p className="text-muted-foreground max-w-md">
+          Click the "+" button in the sidebar to create your first case and start organizing your legal work.
+        </p>
+      </div>
+    );
+  }
+
+  if (!activeCaseId) {
+    return <NotFound />;
+  }
+
   return (
     <Switch>
       <Route path="/">
@@ -28,7 +48,9 @@ function Router({
 }
 
 function AppContent() {
-  const [activeCase, setActiveCase] = useState<string | null>("1");
+  const [activeCase, setActiveCase] = useState<string | null>(null);
+  const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
+  const { toast } = useToast();
 
   const { data: cases = [] } = useQuery<
     Array<{
@@ -42,8 +64,68 @@ function AppContent() {
     queryKey: ["/api/cases"],
   });
 
+  useEffect(() => {
+    if (activeCase === null && cases.length > 0) {
+      setActiveCase(cases[0].id);
+    }
+  }, [activeCase, cases]);
+
+  const createCaseMutation = useMutation({
+    mutationFn: async (caseName: string) => {
+      const caseNumber = `CASE-${Date.now()}`;
+      const response = await apiRequest("POST", "/api/cases", {
+        name: caseName,
+        caseNumber,
+        status: "active",
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      setShowNewCaseDialog(false);
+      setActiveCase(data.id.toString());
+      toast({
+        title: "Case created",
+        description: `${data.name} has been created successfully.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create case",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCaseMutation = useMutation({
+    mutationFn: async (caseId: string) => {
+      await apiRequest("DELETE", `/api/cases/${caseId}`, undefined);
+      return caseId;
+    },
+    onSuccess: (_, deletedCaseId) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      if (activeCase === deletedCaseId) {
+        const remainingCases = cases.filter(c => c.id !== deletedCaseId);
+        setActiveCase(remainingCases.length > 0 ? remainingCases[0].id : null);
+      }
+      toast({
+        title: "Case deleted",
+        description: "The case has been permanently deleted.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete case",
+        variant: "destructive",
+      });
+    },
+  });
+
   const currentCase = cases.find(c => c.id === activeCase);
   const caseName = currentCase?.name || "Loading...";
+  const hasNoCases = cases.length === 0;
 
   const style = {
     "--sidebar-width": "20rem",
@@ -58,7 +140,8 @@ function AppContent() {
             cases={cases}
             activeCase={activeCase}
             onCaseSelect={setActiveCase}
-            onNewCase={() => console.log("New case")}
+            onNewCase={() => setShowNewCaseDialog(true)}
+            onDeleteCase={(caseId) => deleteCaseMutation.mutate(caseId)}
           />
           <div className="flex flex-col flex-1">
             <header className="flex items-center justify-between p-3 border-b">
@@ -66,11 +149,17 @@ function AppContent() {
               <ThemeToggle />
             </header>
             <main className="flex-1 overflow-hidden">
-              <Router activeCaseId={activeCase || "1"} caseName={caseName} />
+              <Router activeCaseId={activeCase} caseName={caseName} hasNoCases={hasNoCases} />
             </main>
           </div>
         </div>
       </SidebarProvider>
+      <NewCaseDialog
+        open={showNewCaseDialog}
+        onOpenChange={setShowNewCaseDialog}
+        onCreateCase={(name) => createCaseMutation.mutate(name)}
+        isCreating={createCaseMutation.isPending}
+      />
       <Toaster />
     </TooltipProvider>
   );

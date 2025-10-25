@@ -1,6 +1,16 @@
 import { useState } from "react";
-import { Settings, Plus, Search } from "lucide-react";
+import { Settings, Plus, Search, Trash2 } from "lucide-react";
 import chickenLogo from "@assets/image_1761371205289.png";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -31,10 +41,13 @@ interface AppSidebarProps {
   activeCase: string | null;
   onCaseSelect: (caseId: string) => void;
   onNewCase: () => void;
+  onDeleteCase: (caseId: string) => void;
 }
 
-export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSidebarProps) {
+export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDeleteCase }: AppSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [caseToDelete, setCaseToDelete] = useState<CaseItem | null>(null);
 
   const filteredCases = cases.filter((caseItem) =>
     caseItem.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -114,7 +127,7 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
             <ScrollArea className="h-[400px]">
               <SidebarMenu>
                 {filteredCases.map((caseItem) => (
-                  <SidebarMenuItem key={caseItem.id}>
+                  <SidebarMenuItem key={caseItem.id} className="group/item relative">
                     <SidebarMenuButton
                       isActive={activeCase === caseItem.id}
                       onClick={() => onCaseSelect(caseItem.id)}
@@ -138,6 +151,19 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
                         <span>{caseItem.documentCount} docs</span>
                       </div>
                     </SidebarMenuButton>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCaseToDelete(caseItem);
+                        setDeleteDialogOpen(true);
+                      }}
+                      data-testid={`button-delete-case-${caseItem.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
@@ -156,6 +182,33 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-case">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Case</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{caseToDelete?.name}"? This will permanently delete the case and all associated documents, messages, and data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (caseToDelete) {
+                  onDeleteCase(caseToDelete.id);
+                  setDeleteDialogOpen(false);
+                  setCaseToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete Case
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }
