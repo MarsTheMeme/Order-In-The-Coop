@@ -304,5 +304,48 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.delete("/api/actions/:id", async (req: Request, res: Response) => {
+    try {
+      const actionId = parseInt(req.params.id);
+
+      const [deletedAction] = await db
+        .delete(suggestedActions)
+        .where(eq(suggestedActions.id, actionId))
+        .returning();
+
+      if (!deletedAction) {
+        return res.status(404).json({ error: "Action not found" });
+      }
+
+      res.json({ success: true, action: deletedAction });
+    } catch (error: any) {
+      console.error("Error deleting action:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/approvals", async (_req: Request, res: Response) => {
+    try {
+      const approvedActions = await db
+        .select({
+          action: suggestedActions,
+          extracted: extractedData,
+          document: documents,
+          case: cases,
+        })
+        .from(suggestedActions)
+        .innerJoin(extractedData, eq(suggestedActions.extractedDataId, extractedData.id))
+        .innerJoin(documents, eq(extractedData.documentId, documents.id))
+        .innerJoin(cases, eq(documents.caseId, cases.id))
+        .where(eq(suggestedActions.status, "approved"))
+        .orderBy(desc(suggestedActions.updatedAt));
+      
+      res.json(approvedActions);
+    } catch (error: any) {
+      console.error("Error fetching approvals:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }

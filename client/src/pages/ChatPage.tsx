@@ -4,6 +4,7 @@ import { ChatInterface } from "@/components/ChatInterface";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { ExtractedDataCard } from "@/components/ExtractedDataCard";
 import { ActionApprovalCard } from "@/components/ActionApprovalCard";
+import { ApprovalsTab } from "@/components/ApprovalsTab";
 import type { ChatMessageProps } from "@/components/ChatMessage";
 import type { ExtractedData } from "@/components/ExtractedDataCard";
 import type { ActionItem } from "@/components/ActionApprovalCard";
@@ -56,6 +57,30 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
 
   const { data: actions = [] } = useQuery<ActionItem[]>({
     queryKey: ["/api/cases", caseId, "actions"],
+  });
+
+  const { data: approvals = [], isLoading: approvalsLoading } = useQuery<
+    Array<{
+      action: {
+        id: number;
+        title: string;
+        description: string;
+        rationale: string;
+        priority: "high" | "medium" | "low";
+        status: string;
+        updatedAt: Date;
+      };
+      case: {
+        id: number;
+        name: string;
+        caseNumber: string;
+      };
+      document: {
+        fileName: string;
+      };
+    }>
+  >({
+    queryKey: ["/api/approvals"],
   });
 
   const sendMessageMutation = useMutation({
@@ -117,6 +142,24 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/approvals"] });
+      toast({
+        title: "Action approved",
+        description: "The action has been moved to the Approvals tab.",
+      });
+    },
+  });
+
+  const deleteActionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/actions/${id}`, "DELETE", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
+      toast({
+        title: "Action rejected",
+        description: "The suggested action has been removed.",
+      });
     },
   });
 
@@ -144,7 +187,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
   };
 
   const handleReject = (id: string) => {
-    updateActionMutation.mutate({ id: parseInt(id), status: "rejected" });
+    deleteActionMutation.mutate(parseInt(id));
   };
 
   const latestExtractedData = extractedDataList[0]?.extracted;
@@ -265,11 +308,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
         <TabsContent value="approvals" className="flex-1 overflow-y-auto m-0" data-testid="tab-content-approvals">
           <div className="p-6">
             <div className="max-w-4xl mx-auto">
-              <div className="text-center py-12 text-muted-foreground">
-                <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">Approvals</h3>
-                <p>Action approval workflow coming soon.</p>
-              </div>
+              <ApprovalsTab approvals={approvals} isLoading={approvalsLoading} />
             </div>
           </div>
         </TabsContent>
