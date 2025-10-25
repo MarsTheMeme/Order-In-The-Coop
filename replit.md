@@ -1,241 +1,68 @@
 # Order In The Coop - AI Legal Assistant
 
 ## Overview
-
-Order In The Coop is an AI-powered legal assistant application featuring "Tender," a chatbot designed to help plaintiff legal teams process case documents, extract key information, and generate actionable next steps. The system accepts multiple document formats (PDF, DOCX, TXT, Excel, CSV, images), analyzes them using Google's Gemini AI, and provides structured insights including case numbers, parties involved, deadlines, key facts, and prioritized action items that require human approval before execution.
+Order In The Coop is an AI-powered legal assistant featuring "Tender," a chatbot designed to help plaintiff legal teams process case documents. The system analyzes various document formats (PDF, DOCX, TXT, Excel, CSV, images) using Google's Gemini AI, extracts key information like case numbers, parties, deadlines, and facts, and generates prioritized, human-approvable action items. The project aims to streamline legal document processing, enhance information extraction, and improve task management for legal professionals.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
+### Frontend
+- **Technology Stack**: React with TypeScript, Vite, Wouter for routing, TanStack Query for server state.
+- **UI Framework**: Shadcn/ui (Radix UI base), Tailwind CSS for styling, custom light/dark mode color scheme, Inter and JetBrains Mono typography.
+- **Design System**: Linear/Notion-inspired professional aesthetic, document-centric layout with fixed sidebar (280px), main content (max-w-7xl), and collapsible right panel (360px).
+- **Key Components**: ChatInterface, FileUploadZone, ExtractedDataCard, ActionApprovalCard, ApprovalsTab, DeadlinesTab (calendar view), AppSidebar (case navigation, search), NewCaseDialog.
+- **Navigation & Search**: Sidebar search for cases with real-time filtering and highlighting. Tab-based navigation for Chat, Documents (pending actions), Approvals (approved actions), and Deadlines (calendar).
+- **Case Management**: Create new cases, delete cases (with CASCADE deletion of all associated data), and display empty states.
 
-**Technology Stack:**
-- React with TypeScript for type safety and component development
-- Vite as the build tool and development server
-- Wouter for lightweight client-side routing
-- TanStack Query for server state management and caching
-
-**UI Framework:**
-- Shadcn/ui component library built on Radix UI primitives
-- Tailwind CSS for utility-first styling with custom design system
-- Custom color scheme supporting light/dark modes
-- Typography system using Inter (UI/body) and JetBrains Mono (monospace for legal data)
-
-**Design System:**
-- Linear/Notion-inspired professional aesthetic optimized for legal workflows
-- Information hierarchy distinguishing AI suggestions from verified data
-- Document-centric layout with fixed sidebar (280px), main content area (max-w-7xl), and collapsible right panel (360px)
-- Spacing primitives based on Tailwind units (3, 4, 6, 8, 12)
-
-**Key Components:**
-- ChatInterface: Message handling with document attachment pills above input, inline controls (attach, voice, send)
-- FileUploadZone: Drag-and-drop file upload supporting multiple formats
-- ExtractedDataCard: Displays parsed legal information (case numbers, parties, deadlines, facts)
-- ActionApprovalCard: Human-in-the-loop approval system for AI-suggested actions with approve/reject buttons
-- ApprovalsTab: Displays approved actions grouped by case with full context (document filename, rationale, priority, approval date)
-- DeadlinesTab: Interactive calendar interface displaying critical deadlines with case context and priority indicators
-- AppSidebar: Case navigation sidebar with search bar, real-time filtering, text highlighting of matches, and case management features
-- NewCaseDialog: Dialog component for creating new cases with auto-generated case numbers
-
-**Navigation & Search:**
-- Sidebar contains search bar for filtering active cases by name or case number
-- Real-time text highlighting of matched search terms using proper regex escaping
-- Tab-based navigation (Chat, Documents, Approvals, Deadlines) in main content area
-- Documents tab shows only pending suggested actions
-- Approvals tab shows only approved actions grouped by case
-- Deadlines tab shows calendar interface with all deadlines from extracted documents
-- Dynamic case name display updates automatically when switching between cases
-
-**Case Management:**
-- **Add Chat**: Click "+" button in sidebar next to "Active Cases" heading → opens dialog prompting for case name → auto-generates case number (CASE-{timestamp}) → creates case in database → automatically navigates to new case's Chat tab → shows success toast notification
-- **Delete Chat**: Hover over case in sidebar → trash icon appears → click trash icon → confirmation dialog appears warning about permanent deletion → click "Delete Case" to confirm or "Cancel" to abort → on confirmation, deletes all related data (documents, messages, extracted data, suggested actions) via database CASCADE constraints → removes uploaded files from storage → removes case from sidebar → navigates to next available case or shows empty state → shows success toast notification
-- **Empty State**: When no cases exist, displays centered UI with clipboard icon, "No Cases Yet" heading, and instructions to create first case using "+" button
-
-### Backend Architecture
-
-**Server Framework:**
-- Express.js with TypeScript running on Node.js
-- ESM module system for modern JavaScript features
-- Custom Vite integration for development with HMR support
-
-**API Design:**
-- RESTful endpoints following `/api` convention
-- File upload handling via Multer middleware with memory storage
-- Request/response logging with duration tracking
-- JSON body parsing with raw body preservation for verification
-
-**File Processing Pipeline:**
-1. User selects files via drag-and-drop or file browser in FileUploadZone dialog
-2. User optionally provides specific analysis instructions (e.g., "focus on finding all critical dates")
-3. User clicks "Analyze Documents" button to initiate upload
-4. Multer receives uploaded files in memory along with optional userInstructions parameter
-5. Text extraction based on file type (PDF via pdf-parse, DOCX via mammoth, Excel/CSV via xlsx library, plain text)
-6. User instructions (if provided) are incorporated into the AI prompt with clear delimiter
-7. Extracted text sent to Gemini AI for contextual analysis
-8. Structured response parsed and stored in database
-9. File metadata saved to local filesystem storage
-10. Chat message records both uploaded filename and user instructions
-
-**Supported File Formats:**
-- **PDF**: Extracted via pdf-parse library, preserving text content
-- **DOCX/DOC**: Extracted via mammoth library, converting to plain text
-- **Excel (.xlsx, .xls)**: Parsed via xlsx library, each sheet converted to CSV format with sheet names preserved
-- **CSV**: Parsed via xlsx library as a single-sheet workbook
-- **TXT**: Direct UTF-8 text reading
-- **Images**: Supported but text extraction not implemented (future OCR integration planned)
-
-**AI Integration:**
-- Google Gemini AI (@google/genai) for document analysis
-- Context-aware prompts that incorporate optional user instructions
-- When user provides instructions, AI prompt includes "USER'S SPECIFIC INSTRUCTIONS" section to guide analysis
-- Structured prompts requesting specific legal information extraction
-- JSON response format for case numbers, parties, deadlines, facts, and suggested actions
-- Confidence scoring for extracted data
-- **Conversational Responses**: When user provides specific instructions (e.g., "extract party names"), AI generates a second conversational response that directly addresses the user's request in the Chat tab, making the interaction more helpful and personalized
-- Falls back to standard generic analysis when no instructions provided
+### Backend
+- **Server Framework**: Express.js with TypeScript, Node.js, ESM modules.
+- **API Design**: RESTful endpoints, Multer for file uploads (in-memory storage), request/response logging.
+- **File Processing Pipeline**: Uploaded files undergo text extraction (pdf-parse, mammoth, xlsx library) or direct multimodal processing (for PDFs with Gemini). Extracted text/PDFs are sent to Gemini AI, structured responses are parsed and stored, and file metadata is saved.
+- **Supported File Formats**: PDF (multimodal vision processing via Gemini), DOCX/DOC, Excel (.xlsx, .xls), CSV, TXT. Images are supported for upload but OCR is planned for future.
+- **AI Integration**: Google Gemini AI (gemini-2.5-flash model) for document analysis, multimodal vision processing for PDFs, context-aware prompts including user instructions, JSON response format for structured data, and conversational responses for specific user queries.
 
 ### Data Storage
-
-**Database:**
-- PostgreSQL via Neon serverless driver (@neondatabase/serverless)
-- Drizzle ORM for type-safe database queries and schema management
-- WebSocket support for serverless database connections
-
-**Schema Design:**
-- `cases`: Core case information (name, case number, status)
-- `documents`: File metadata linked to cases (ON DELETE CASCADE from cases)
-- `chatMessages`: Conversation history with role-based messages (ON DELETE CASCADE from cases)
-- `extractedData`: AI-extracted information with JSONB fields for complex data structures (ON DELETE CASCADE from documents)
-- `suggestedActions`: Action items with approval workflow - pending/approved/rejected status (ON DELETE CASCADE from extractedData)
-
-**Cascade Deletion:** All foreign key relationships configured with ON DELETE CASCADE to ensure complete cleanup when cases are deleted. Delete flow: DELETE /api/cases/:id → fetch associated documents → delete files from storage → delete case record → database cascades deletion to all related tables (documents, chatMessages, extractedData, suggestedActions).
-
-**Rationale:** PostgreSQL chosen for JSONB support enabling flexible storage of variable legal document structures while maintaining relational integrity. Drizzle provides compile-time type safety matching database schema to TypeScript types.
-
-### File Storage
-
-**Approach:** Local filesystem storage in private directory
-- Files stored in `.private/documents` with timestamp-prefixed filenames
-- File URLs generated as `/files/{filename}` routes
-- Separation of file metadata (database) from binary content (filesystem)
-
-**Alternative Considered:** Cloud object storage (S3, R2) would provide better scalability but adds complexity and cost for initial deployment. Local storage sufficient for development and small-scale deployments.
-
-### Authentication & Authorization
-
-**Current State:** No authentication implemented (in-memory user storage exists but unused)
-**Future Consideration:** Session-based authentication with connect-pg-simple for PostgreSQL session storage already configured in dependencies
+- **Database**: PostgreSQL via Neon serverless driver, Drizzle ORM for type-safe queries and schema.
+- **Schema Design**: `cases`, `documents`, `chatMessages`, `extractedData`, `suggestedActions` tables with `ON DELETE CASCADE` for data integrity.
+- **File Storage**: Local filesystem storage (`.private/documents`) with timestamp-prefixed filenames.
 
 ### Human-in-the-Loop Workflow
-
-**Design Principle:** AI suggestions require explicit human approval before execution
-
-**Workflow States:**
-- **Pending**: AI-generated actions appear in Documents tab with approve/reject buttons
-- **Approved**: User clicks approve → action moves to Approvals tab as a permanent reminder grouped by case
-- **Rejected**: User clicks reject → action is deleted entirely from the system
-
-**Approval Flow:**
-1. User reviews pending action in Documents tab
-2. Clicks approve button → PATCH /api/actions/:id updates status to "approved"
-3. Action disappears from Documents tab
-4. Action appears in Approvals tab grouped by case with full context:
-   - Action title, description, and rationale
-   - Priority badge (high/medium/low)
-   - Source document filename
-   - Approval date
-5. Approved actions persist as reminders for legal team
-
-**Rejection Flow:**
-1. User reviews pending action in Documents tab
-2. Clicks reject button → DELETE /api/actions/:id removes action from database
-3. Action disappears from Documents tab
-4. Action does NOT appear in Approvals tab (deleted entirely)
-
-**Visual Indicators:**
-- Priority badges (high/medium/low) guide urgency assessment
-- Toast notifications confirm approve/reject actions
-- Empty state messaging when no approvals exist
-- Case grouping organizes approved actions by legal matter
-
-**Rationale:** Legal work demands verification and accountability. This prevents automated AI actions while accelerating decision-making through structured recommendations. The Approvals tab serves as a permanent reminder system for verified actions that require follow-up.
+- **Design Principle**: AI suggestions require explicit human approval.
+- **Workflow States**: Pending (in Documents tab, approve/reject buttons), Approved (moves to Approvals tab with full context), Rejected (deleted).
+- **Approval Flow**: User approves, action moves to Approvals tab as a permanent, grouped reminder with details (title, description, rationale, priority, source, date).
+- **Rejection Flow**: User rejects, action is deleted from the system.
 
 ### Deadline Calendar System
-
-**Design Principle:** Visual calendar interface for tracking critical legal deadlines across all cases
-
-**Calendar Interface:**
-- Two-panel layout: Interactive calendar (left) and deadline details (right)
-- Custom calendar component with month navigation (prev/next/reset buttons)
-- Dates with deadlines are visually highlighted (bold, underlined, primary color, small dot indicator)
-- Click any date to view all deadlines scheduled for that day
-- 6-week calendar grid (42 cells) displaying Mon-Sun layout
-
-**Deadline Display:**
-- Each deadline card shows:
-  - Description of the deadline
-  - Priority badge (high/medium/low) with color coding
-  - Associated case name and case number
-  - Source document that contained the deadline
-- Priority color scheme:
-  - High: Red background with alert icon
-  - Medium: Yellow background
-  - Low: Blue background
-- ScrollArea for handling multiple deadlines on a single date
-
-**Data Flow:**
-1. AI extracts deadlines from documents during analysis
-2. Deadlines stored in extractedData.deadlines JSONB field
-3. Backend GET /api/deadlines aggregates all deadlines across cases
-4. Frontend fetches and parses ISO date strings with date-fns
-5. CustomCalendar component checks each day for deadlines and applies visual indicators
-6. Date selection filters deadlines using isSameDay comparison
-
-**Empty States:**
-- No deadlines for selected date: Shows calendar icon with helpful message
-- Loading state: Displays loading message while fetching data
-
-**Rationale:** Legal deadlines are mission-critical. Missing a filing deadline can result in case dismissal. The calendar provides an at-a-glance view of all upcoming deadlines across multiple cases, helping legal teams prioritize work and avoid missed deadlines. Grouping by date rather than case enables better daily planning and workload management.
+- **Design Principle**: Visual calendar for critical legal deadlines across all cases.
+- **Calendar Interface**: Two-panel layout (calendar + deadline details), custom calendar component with month navigation. Dates with deadlines are visually highlighted.
+- **Deadline Display**: Each deadline card shows description, priority, associated case, and source document. Priority is color-coded.
+- **Data Flow**: AI extracts deadlines, stored in `extractedData.deadlines`. Backend aggregates all deadlines, frontend fetches and displays them in the calendar.
 
 ## External Dependencies
 
 ### AI Services
-- **Google Gemini AI**: Document analysis and natural language processing
-  - Requires `GEMINI_API_KEY` environment variable
-  - Used for extracting structured legal information from unstructured documents
-  - Generates contextual action recommendations
+- **Google Gemini AI**: Document analysis, NLP, multimodal vision (requires `GEMINI_API_KEY`).
 
 ### Database
-- **Neon PostgreSQL**: Serverless PostgreSQL database
-  - Requires `DATABASE_URL` environment variable
-  - WebSocket connection support for serverless environments
-  - Schema migrations managed via Drizzle Kit
+- **Neon PostgreSQL**: Serverless PostgreSQL database (requires `DATABASE_URL`).
 
 ### UI Libraries
-- **Radix UI**: Accessible component primitives (dialogs, dropdowns, accordions, etc.)
-- **Shadcn/ui**: Pre-built component library with Tailwind styling
-- **Lucide React**: Icon library for consistent iconography
-- **date-fns**: Modern JavaScript date utility library for date parsing and comparison
+- **Radix UI**: Accessible component primitives.
+- **Shadcn/ui**: Pre-built component library.
+- **Lucide React**: Icon library.
+- **date-fns**: Date utility library.
 
 ### File Processing
-- **pdf-parse**: PDF text extraction
-- **mammoth**: DOCX document conversion to plain text
-- **multer**: Multipart form data handling for file uploads
+- **pdf-parse**: PDF text extraction.
+- **mammoth**: DOCX conversion to plain text.
+- **multer**: Multipart form data handling for file uploads.
 
 ### Development Tools
-- **Vite**: Frontend build tool with development server
-- **TypeScript**: Type safety across frontend and backend
-- **Drizzle Kit**: Database schema management and migrations
-- **ESBuild**: Backend bundling for production deployment
+- **Vite**: Frontend build tool.
+- **TypeScript**: Type safety.
+- **Drizzle Kit**: Database schema management.
 
 ### Styling
-- **Tailwind CSS**: Utility-first CSS framework
-- **PostCSS**: CSS processing with autoprefixer
-- **Google Fonts**: Inter and JetBrains Mono font families
-
-### State Management
-- **TanStack Query**: Server state management with automatic caching and refetching
-- **React Hook Form**: Form state management (via @hookform/resolvers dependency)
+- **Tailwind CSS**: Utility-first CSS framework.

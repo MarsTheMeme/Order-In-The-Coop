@@ -27,8 +27,7 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   
   if (fileType === "application/pdf") {
     try {
-      const pdfParseModule = await import("pdf-parse");
-      const pdfParse = pdfParseModule.default || pdfParseModule;
+      const { default: pdfParse } = await import("pdf-parse");
       const data = await pdfParse(file.buffer);
       return data.text;
     } catch (error) {
@@ -227,15 +226,24 @@ export function registerRoutes(app: Express): Server {
             isAnalysis: false,
           });
 
-        const documentText = await extractTextFromFile(req.file);
+        const isPDF = req.file.mimetype === "application/pdf";
         
-        if (!documentText || documentText.trim().length < 50) {
-          return res.status(400).json({ 
-            error: "Could not extract text from document. Please ensure the document contains readable text." 
-          });
+        let documentText = "";
+        if (!isPDF) {
+          documentText = await extractTextFromFile(req.file);
+          if (!documentText || documentText.trim().length < 50) {
+            return res.status(400).json({ 
+              error: "Could not extract text from document. Please ensure the document contains readable text." 
+            });
+          }
         }
 
-        const analysis = await analyzeDocument(documentText, req.file.originalname, userInstructions);
+        const analysis = await analyzeDocument(
+          documentText, 
+          req.file.originalname, 
+          userInstructions,
+          isPDF ? req.file.buffer : undefined
+        );
         console.log("[DEBUG] Analysis completed. Has conversational response:", !!analysis.conversationalResponse);
 
         const [extracted] = await db

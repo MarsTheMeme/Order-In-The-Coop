@@ -29,13 +29,14 @@ export interface DocumentAnalysis {
 export async function analyzeDocument(
   documentText: string,
   fileName: string,
-  userInstructions?: string
+  userInstructions?: string,
+  pdfBuffer?: Buffer
 ): Promise<DocumentAnalysis> {
   const instructionsSection = userInstructions 
     ? `\n\nUSER'S SPECIFIC INSTRUCTIONS: ${userInstructions}\nPay special attention to these instructions while analyzing the document. Tailor your extraction and suggested actions to address what the user is asking for.\n`
     : '';
 
-  const prompt = `You are Tender, an AI legal assistant helping plaintiff legal teams process case documents.${instructionsSection}
+  const basePrompt = `You are Tender, an AI legal assistant helping plaintiff legal teams process case documents.${instructionsSection}
 
 Analyze the following legal document and extract:
 
@@ -44,6 +45,8 @@ Analyze the following legal document and extract:
 3. Critical Deadlines (dates with descriptions and priority: high/medium/low)
 4. Key Facts (important facts, evidence, or testimony)
 5. Suggested Actions (specific next steps the legal team should take)
+
+${pdfBuffer ? 'This document may contain images, photos, diagrams, or visual evidence. Analyze ALL visual content along with text to extract comprehensive information.' : ''}
 
 For each suggested action, provide:
 - A clear title
@@ -67,15 +70,29 @@ Return your analysis in valid JSON format with this structure:
 }
 
 Document: ${fileName}
----
-${documentText}
----
 
 Provide only the JSON response, no other text.`;
 
+  let contents: any;
+  
+  if (pdfBuffer) {
+    console.log(`[PDF Vision] Processing PDF with embedded images: ${fileName}`);
+    contents = [
+      { text: basePrompt },
+      {
+        inlineData: {
+          mimeType: 'application/pdf',
+          data: pdfBuffer.toString('base64')
+        }
+      }
+    ];
+  } else {
+    contents = `${basePrompt}\n---\n${documentText}\n---`;
+  }
+
   const result = await genAI.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: prompt,
+    contents,
   });
   
   const text = result.text || "";
