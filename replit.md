@@ -144,9 +144,10 @@ Preferred communication style: Simple, everyday language.
 
 **Calendar Interface:**
 - Two-panel layout: Interactive calendar (left) and deadline details (right)
-- Calendar built with react-day-picker for intuitive date selection
-- Dates with deadlines are visually highlighted (bold, underlined, primary color)
+- Custom calendar component with month navigation (prev/next/reset buttons)
+- Dates with deadlines are visually highlighted (bold, underlined, primary color, small dot indicator)
 - Click any date to view all deadlines scheduled for that day
+- 6-week calendar grid (42 cells) displaying Mon-Sun layout
 
 **Deadline Display:**
 - Each deadline card shows:
@@ -165,7 +166,7 @@ Preferred communication style: Simple, everyday language.
 2. Deadlines stored in extractedData.deadlines JSONB field
 3. Backend GET /api/deadlines aggregates all deadlines across cases
 4. Frontend fetches and parses ISO date strings with date-fns
-5. Calendar highlights active dates using react-day-picker modifiers
+5. CustomCalendar component checks each day for deadlines and applies visual indicators
 6. Date selection filters deadlines using isSameDay comparison
 
 **Empty States:**
@@ -192,7 +193,6 @@ Preferred communication style: Simple, everyday language.
 - **Radix UI**: Accessible component primitives (dialogs, dropdowns, accordions, etc.)
 - **Shadcn/ui**: Pre-built component library with Tailwind styling
 - **Lucide React**: Icon library for consistent iconography
-- **react-day-picker**: Accessible date picker component for calendar interface
 - **date-fns**: Modern JavaScript date utility library for date parsing and comparison
 
 ### File Processing
