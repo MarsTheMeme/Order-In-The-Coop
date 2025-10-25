@@ -2,7 +2,7 @@
 
 ## Overview
 
-Order In The Coop is an AI-powered legal assistant application featuring "Tender," a chatbot designed to help plaintiff legal teams process case documents, extract key information, and generate actionable next steps. The system accepts multiple document formats (PDF, DOCX, TXT, images), analyzes them using Google's Gemini AI, and provides structured insights including case numbers, parties involved, deadlines, key facts, and prioritized action items that require human approval before execution.
+Order In The Coop is an AI-powered legal assistant application featuring "Tender," a chatbot designed to help plaintiff legal teams process case documents, extract key information, and generate actionable next steps. The system accepts multiple document formats (PDF, DOCX, TXT, Excel, CSV, images), analyzes them using Google's Gemini AI, and provides structured insights including case numbers, parties involved, deadlines, key facts, and prioritized action items that require human approval before execution.
 
 ## User Preferences
 
@@ -72,12 +72,20 @@ Preferred communication style: Simple, everyday language.
 2. User optionally provides specific analysis instructions (e.g., "focus on finding all critical dates")
 3. User clicks "Analyze Documents" button to initiate upload
 4. Multer receives uploaded files in memory along with optional userInstructions parameter
-5. Text extraction based on file type (PDF via pdf-parse, DOCX via mammoth, plain text)
+5. Text extraction based on file type (PDF via pdf-parse, DOCX via mammoth, Excel/CSV via xlsx library, plain text)
 6. User instructions (if provided) are incorporated into the AI prompt with clear delimiter
 7. Extracted text sent to Gemini AI for contextual analysis
 8. Structured response parsed and stored in database
 9. File metadata saved to local filesystem storage
 10. Chat message records both uploaded filename and user instructions
+
+**Supported File Formats:**
+- **PDF**: Extracted via pdf-parse library, preserving text content
+- **DOCX/DOC**: Extracted via mammoth library, converting to plain text
+- **Excel (.xlsx, .xls)**: Parsed via xlsx library, each sheet converted to CSV format with sheet names preserved
+- **CSV**: Parsed via xlsx library as a single-sheet workbook
+- **TXT**: Direct UTF-8 text reading
+- **Images**: Supported but text extraction not implemented (future OCR integration planned)
 
 **AI Integration:**
 - Google Gemini AI (@google/genai) for document analysis
