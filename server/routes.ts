@@ -25,9 +25,15 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   const fileType = file.mimetype;
   
   if (fileType === "application/pdf") {
-    const pdfParse = (await import("pdf-parse")).default;
-    const data = await pdfParse(file.buffer);
-    return data.text;
+    try {
+      const pdfParseModule = await import("pdf-parse");
+      const pdfParse = pdfParseModule.default || pdfParseModule;
+      const data = await pdfParse(file.buffer);
+      return data.text;
+    } catch (error) {
+      console.error("PDF parsing error:", error);
+      throw new Error("Failed to parse PDF file");
+    }
   } else if (
     fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     fileType === "application/msword"
@@ -157,6 +163,15 @@ export function registerRoutes(app: Express): Server {
             storageUrl: fileUrl,
           })
           .returning();
+
+        await db
+          .insert(chatMessages)
+          .values({
+            caseId,
+            role: "user",
+            content: `Uploaded document: ${req.file.originalname}`,
+            isAnalysis: false,
+          });
 
         const documentText = await extractTextFromFile(req.file);
         

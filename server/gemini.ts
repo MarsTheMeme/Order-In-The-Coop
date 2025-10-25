@@ -68,7 +68,7 @@ ${documentText}
 Provide only the JSON response, no other text.`;
 
   const result = await genAI.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     contents: prompt,
   });
   
@@ -99,7 +99,7 @@ ${context ? `Context from recent analysis:\n${context}\n\n` : ""}User message: $
 Respond helpfully and professionally. If the user asks about document analysis, encourage them to upload documents. Keep responses concise and actionable.`;
 
   const result = await genAI.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     contents: prompt,
   });
   
