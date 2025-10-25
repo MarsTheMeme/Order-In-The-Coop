@@ -37,7 +37,8 @@ Preferred communication style: Simple, everyday language.
 - ActionApprovalCard: Human-in-the-loop approval system for AI-suggested actions with approve/reject buttons
 - ApprovalsTab: Displays approved actions grouped by case with full context (document filename, rationale, priority, approval date)
 - DeadlinesTab: Interactive calendar interface displaying critical deadlines with case context and priority indicators
-- AppSidebar: Case navigation sidebar with search bar, real-time filtering, and text highlighting of matches
+- AppSidebar: Case navigation sidebar with search bar, real-time filtering, text highlighting of matches, and case management features
+- NewCaseDialog: Dialog component for creating new cases with auto-generated case numbers
 
 **Navigation & Search:**
 - Sidebar contains search bar for filtering active cases by name or case number
@@ -47,6 +48,11 @@ Preferred communication style: Simple, everyday language.
 - Approvals tab shows only approved actions grouped by case
 - Deadlines tab shows calendar interface with all deadlines from extracted documents
 - Dynamic case name display updates automatically when switching between cases
+
+**Case Management:**
+- **Add Chat**: Click "+" button in sidebar next to "Active Cases" heading → opens dialog prompting for case name → auto-generates case number (CASE-{timestamp}) → creates case in database → automatically navigates to new case's Chat tab → shows success toast notification
+- **Delete Chat**: Hover over case in sidebar → trash icon appears → click trash icon → confirmation dialog appears warning about permanent deletion → click "Delete Case" to confirm or "Cancel" to abort → on confirmation, deletes all related data (documents, messages, extracted data, suggested actions) via database CASCADE constraints → removes uploaded files from storage → removes case from sidebar → navigates to next available case or shows empty state → shows success toast notification
+- **Empty State**: When no cases exist, displays centered UI with clipboard icon, "No Cases Yet" heading, and instructions to create first case using "+" button
 
 ### Backend Architecture
 
@@ -83,10 +89,12 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Design:**
 - `cases`: Core case information (name, case number, status)
-- `documents`: File metadata linked to cases
-- `chatMessages`: Conversation history with role-based messages
-- `extractedData`: AI-extracted information with JSONB fields for complex data structures
-- `suggestedActions`: Action items with approval workflow (pending/approved/rejected status)
+- `documents`: File metadata linked to cases (ON DELETE CASCADE from cases)
+- `chatMessages`: Conversation history with role-based messages (ON DELETE CASCADE from cases)
+- `extractedData`: AI-extracted information with JSONB fields for complex data structures (ON DELETE CASCADE from documents)
+- `suggestedActions`: Action items with approval workflow - pending/approved/rejected status (ON DELETE CASCADE from extractedData)
+
+**Cascade Deletion:** All foreign key relationships configured with ON DELETE CASCADE to ensure complete cleanup when cases are deleted. Delete flow: DELETE /api/cases/:id → fetch associated documents → delete files from storage → delete case record → database cascades deletion to all related tables (documents, chatMessages, extractedData, suggestedActions).
 
 **Rationale:** PostgreSQL chosen for JSONB support enabling flexible storage of variable legal document structures while maintaining relational integrity. Drizzle provides compile-time type safety matching database schema to TypeScript types.
 
