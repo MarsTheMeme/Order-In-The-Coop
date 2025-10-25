@@ -41,6 +41,31 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
     caseItem.caseNumber.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim()) return <span>{text}</span>;
+    
+    // Escape special regex characters to prevent syntax errors
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = text.split(regex);
+    
+    return (
+      <span>
+        {parts.map((part, index) => {
+          // Check if this part matches the query (case-insensitive)
+          const isMatch = part.toLowerCase() === query.toLowerCase();
+          return isMatch ? (
+            <mark key={index} className="bg-primary/20 text-foreground font-semibold rounded px-0.5">
+              {part}
+            </mark>
+          ) : (
+            <span key={index}>{part}</span>
+          );
+        })}
+      </span>
+    );
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -92,7 +117,9 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
                       data-testid={`case-${caseItem.id}`}
                     >
                       <div className="flex items-center justify-between w-full gap-2">
-                        <span className="font-medium text-sm truncate">{caseItem.name}</span>
+                        <span className="font-medium text-sm truncate">
+                          {highlightMatch(caseItem.name, searchQuery)}
+                        </span>
                         {caseItem.pendingApprovals > 0 && (
                           <Badge variant="secondary" className="text-xs px-1.5">
                             {caseItem.pendingApprovals}
@@ -100,7 +127,9 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
                         )}
                       </div>
                       <div className="flex items-center gap-3 w-full text-xs text-muted-foreground mt-1">
-                        <span className="font-mono">{caseItem.caseNumber}</span>
+                        <span className="font-mono">
+                          {highlightMatch(caseItem.caseNumber, searchQuery)}
+                        </span>
                         <span>{caseItem.documentCount} docs</span>
                       </div>
                     </SidebarMenuButton>
