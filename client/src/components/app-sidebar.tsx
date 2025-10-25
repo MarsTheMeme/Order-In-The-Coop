@@ -70,7 +70,12 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <img src={chickenLogo} alt="Tender" className="w-9 h-9 rounded-md" />
+          <img 
+            src={chickenLogo} 
+            alt="Tender" 
+            className="w-10 h-10 rounded-md object-contain" 
+            style={{ imageRendering: 'pixelated' }}
+          />
           <div>
             <h2 className="text-lg font-semibold">Order In The Coop</h2>
             <p className="text-xs text-muted-foreground">with Tender</p>
