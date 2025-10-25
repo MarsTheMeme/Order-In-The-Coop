@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ChatMessage, type ChatMessageProps } from "./ChatMessage";
-import chickenAvatar from "@assets/image_1761371205289.png";
+import chickenAvatar from "@assets/NEWChickenlogo_1761424521018.png";
 
 interface AttachedDocument {
   id: string;
@@ -56,7 +56,12 @@ export function ChatInterface({
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-12 text-center">
               <div className="w-16 h-16 rounded-md mb-4">
-                <img src={chickenAvatar} alt="Tender" className="w-full h-full rounded-md" />
+                <img 
+                  src={chickenAvatar} 
+                  alt="Tender" 
+                  className="w-full h-full rounded-md object-contain" 
+                  style={{ imageRendering: 'pixelated' }}
+                />
               </div>
               <h3 className="text-lg font-semibold mb-2">Welcome! I'm Tender, your AI legal assistant</h3>
               <p className="text-sm text-muted-foreground max-w-md">

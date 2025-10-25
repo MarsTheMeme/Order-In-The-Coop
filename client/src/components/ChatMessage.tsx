@@ -1,7 +1,7 @@
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import chickenAvatar from "@assets/image_1761371205289.png";
+import chickenAvatar from "@assets/NEWChickenlogo_1761424521018.png";
 
 export interface ChatMessageProps {
   role: "user" | "assistant";
@@ -16,7 +16,14 @@ export function ChatMessage({ role, content, timestamp, isAnalysis }: ChatMessag
   return (
     <div className={`flex gap-4 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
-        <img src={chickenAvatar} alt="Tender" className="flex-shrink-0 w-9 h-9 rounded-md" />
+        <div className="flex-shrink-0 w-9 h-9">
+          <img 
+            src={chickenAvatar} 
+            alt="Tender" 
+            className="w-full h-full rounded-md object-contain" 
+            style={{ imageRendering: 'pixelated' }}
+          />
+        </div>
       )}
       
       <div className={`flex-1 max-w-3xl ${isUser ? "flex justify-end" : ""}`}>

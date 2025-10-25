@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Settings, Plus, Search, Trash2 } from "lucide-react";
-import chickenLogo from "@assets/image_1761371205289.png";
+import chickenLogo from "@assets/NEWChickenlogo_1761424521018.png";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,12 +83,14 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <img 
-            src={chickenLogo} 
-            alt="Tender" 
-            className="w-10 h-10 rounded-md object-contain" 
-            style={{ imageRendering: 'pixelated' }}
-          />
+          <div className="w-10 h-10 flex-shrink-0">
+            <img 
+              src={chickenLogo} 
+              alt="Tender" 
+              className="w-full h-full rounded-md object-contain" 
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
           <div>
             <h2 className="text-lg font-semibold">Order In The Coop</h2>
             <p className="text-xs text-muted-foreground">with Tender</p>
