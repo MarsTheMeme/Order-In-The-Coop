@@ -138,7 +138,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
 
   const updateActionMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return apiRequest(`/api/actions/${id}`, "PATCH", { status });
+      return apiRequest("PATCH", `/api/actions/${id}`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
@@ -152,7 +152,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
 
   const deleteActionMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/actions/${id}`, "DELETE", {});
+      return apiRequest("DELETE", `/api/actions/${id}`, undefined);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
@@ -201,14 +201,16 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
       }
     : null;
 
-  const mappedActions = actions.map((action) => ({
-    id: action.id.toString(),
-    title: action.title,
-    description: action.description,
-    rationale: action.rationale,
-    priority: action.priority as "high" | "medium" | "low",
-    status: action.status as "pending" | "approved" | "rejected",
-  }));
+  const mappedActions = actions
+    .filter((action) => action.status === "pending")
+    .map((action) => ({
+      id: action.id.toString(),
+      title: action.title,
+      description: action.description,
+      rationale: action.rationale,
+      priority: action.priority as "high" | "medium" | "low",
+      status: action.status as "pending" | "approved" | "rejected",
+    }));
 
   return (
     <div className="flex flex-col h-full">
