@@ -237,7 +237,7 @@ export function registerRoutes(app: Express): Server {
           .values({
             caseId,
             role: "assistant",
-            content: "Analysis complete! I've extracted key information from the document. Please review the extracted data below and approve or reject the suggested actions.",
+            content: "Analysis complete! I've extracted key information from the document. The extracted data and suggested actions are now available in the Documents tab for your review and approval.",
             isAnalysis: true,
           })
           .returning();
