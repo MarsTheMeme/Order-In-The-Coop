@@ -154,7 +154,7 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2 flex-shrink-0"
+                          className="h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2 flex-shrink-0 group/delete"
                           onClick={(e) => {
                             e.stopPropagation();
                             setCaseToDelete(caseItem);
@@ -162,7 +162,7 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
                           }}
                           data-testid={`button-delete-case-${caseItem.id}`}
                         >
-                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          <Trash2 className="w-3.5 h-3.5 text-destructive group-hover/delete:text-red-600 dark:group-hover/delete:text-red-500 transition-colors" />
                         </Button>
                       </div>
                     </SidebarMenuButton>
@@ -203,7 +203,7 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
                   setCaseToDelete(null);
                 }
               }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
               data-testid="button-confirm-delete"
             >
               Delete Case
