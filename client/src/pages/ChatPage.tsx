@@ -5,6 +5,7 @@ import { FileUploadZone } from "@/components/FileUploadZone";
 import { ExtractedDataCard } from "@/components/ExtractedDataCard";
 import { ActionApprovalCard } from "@/components/ActionApprovalCard";
 import { ApprovalsTab } from "@/components/ApprovalsTab";
+import { DeadlinesTab } from "@/components/DeadlinesTab";
 import type { ChatMessageProps } from "@/components/ChatMessage";
 import type { ExtractedData } from "@/components/ExtractedDataCard";
 import type { ActionItem } from "@/components/ActionApprovalCard";
@@ -316,15 +317,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
         </TabsContent>
 
         <TabsContent value="deadlines" className="flex-1 overflow-y-auto m-0" data-testid="tab-content-deadlines">
-          <div className="p-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center py-12 text-muted-foreground">
-                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">Deadlines</h3>
-                <p>Deadline tracking and calendar coming soon.</p>
-              </div>
-            </div>
-          </div>
+          <DeadlinesTab />
         </TabsContent>
       </Tabs>
 
