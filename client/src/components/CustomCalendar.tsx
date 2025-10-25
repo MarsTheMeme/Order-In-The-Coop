@@ -65,19 +65,19 @@ export function CustomCalendar({ deadlines, onDateSelect, selectedDate }: Custom
 
   // Create calendar grid
   const date = new Date(currentYear, currentMonth, 1);
-  let weekDay = (date.getDay() !== 0) ? date.getDay() : 7;
+  // Get day of week (0=Sun, 1=Mon, ..., 6=Sat) and convert to (Mon=0, Tue=1, ..., Sun=6)
+  let weekDay = date.getDay();
+  weekDay = weekDay === 0 ? 6 : weekDay - 1;
 
   // Get last day of month
   const lastDayDate = new Date(currentYear, currentMonth + 1, 0);
   const lastDay = lastDayDate.getDate();
 
   const calendar: (number | string)[] = [];
-  const start = weekDay - 1;
-  const end = weekDay + lastDay - 1;
   
   for (let i = 0; i < 42; ++i) {
-    if (i >= start && i < end) {
-      calendar[i] = i - weekDay + 2;
+    if (i >= weekDay && i < weekDay + lastDay) {
+      calendar[i] = i - weekDay + 1;
     } else {
       calendar[i] = '';
     }

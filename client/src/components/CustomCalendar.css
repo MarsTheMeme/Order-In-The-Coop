@@ -19,15 +19,19 @@
 }
 
 .calendar-month .month-selector {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.5rem;
 }
 
 .calendar-month .month-selector a {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 2rem;
   height: 2rem;
-  line-height: 2rem;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.3s ease;
