@@ -2,7 +2,6 @@ import { Send, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage, type ChatMessageProps } from "./ChatMessage";
 import chickenAvatar from "@assets/image_1761371205289.png";
 
@@ -14,12 +13,10 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ messages, onSendMessage, isProcessing }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = () => {
@@ -38,7 +35,7 @@ export function ChatInterface({ messages, onSendMessage, isProcessing }: ChatInt
 
   return (
     <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 px-6" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto px-6">
         <div className="max-w-4xl mx-auto py-6 space-y-6">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-12 text-center">
@@ -52,7 +49,10 @@ export function ChatInterface({ messages, onSendMessage, isProcessing }: ChatInt
               </p>
             </div>
           ) : (
-            messages.map((message, index) => <ChatMessage key={index} {...message} />)
+            <>
+              {messages.map((message, index) => <ChatMessage key={index} {...message} />)}
+              <div ref={messagesEndRef} />
+            </>
           )}
           {isProcessing && (
             <div className="flex items-center gap-3 text-muted-foreground">
@@ -61,9 +61,9 @@ export function ChatInterface({ messages, onSendMessage, isProcessing }: ChatInt
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="border-t p-4">
+      <div className="border-t p-4 flex-shrink-0">
         <div className="max-w-4xl mx-auto">
           <div className="flex gap-3">
             <Textarea

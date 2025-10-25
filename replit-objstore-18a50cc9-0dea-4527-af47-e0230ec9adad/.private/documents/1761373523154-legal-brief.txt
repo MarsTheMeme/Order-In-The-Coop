@@ -1,0 +1,28 @@
+CASE NO. CV-2024-555
+
+  DISTRICT COURT - NORTHERN DISTRICT
+
+  PLAINTIFF: Robert Chen
+  DEFENDANT: BuildTech Corporation
+
+  MOTION FOR PRELIMINARY INJUNCTION
+
+  Filed: October 15, 2024
+  Hearing: November 5, 2024
+
+  FACTS:
+  1. Plaintiff was employed as Chief Engineer from 2020-2024
+  2. Non-compete agreement signed in 2020
+  3. Plaintiff terminated August 2024
+  4. Plaintiff joined competitor TechBuild Inc. on September 1, 2024
+  5. Defendant alleges breach of non-compete clause
+
+  DEADLINES:
+  - Opposition brief due: October 28, 2024
+  - Reply brief due: November 1, 2024
+  - Hearing date: November 5, 2024
+
+  RELIEF SOUGHT:
+  - Temporary restraining order preventing plaintiff from working at TechBuild
+  - Enforcement of non-compete agreement
+  
