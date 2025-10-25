@@ -23,6 +23,7 @@ export interface DocumentAnalysis {
     rationale: string;
     priority: "high" | "medium" | "low";
   }>;
+  conversationalResponse?: string;
 }
 
 export async function analyzeDocument(
@@ -88,6 +89,25 @@ Provide only the JSON response, no other text.`;
   
   if (!analysis.confidence) {
     analysis.confidence = 0.85;
+  }
+
+  if (userInstructions) {
+    const responsePrompt = `You are Tender, an AI legal assistant. A user just uploaded a document and asked you to: "${userInstructions}"
+
+Based on the analysis you performed, here's what you found:
+- Case Number: ${analysis.caseNumber || "Not found"}
+- Parties: ${analysis.parties?.join(", ") || "Not found"}
+- Deadlines: ${analysis.deadlines?.map(d => `${d.description} (${d.date})`).join(", ") || "Not found"}
+- Key Facts: ${analysis.keyFacts?.slice(0, 3).join("; ") || "Not found"}
+
+Provide a helpful, conversational response that directly answers the user's request. Be specific and reference the information you found. If you found the information they asked for, present it clearly. If not, explain what you did find. Keep it concise and professional.`;
+
+    const responseResult = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: responsePrompt,
+    });
+
+    analysis.conversationalResponse = responseResult.text || "";
   }
 
   return analysis;

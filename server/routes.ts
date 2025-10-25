@@ -238,12 +238,16 @@ export function registerRoutes(app: Express): Server {
 
         const actions = await Promise.all(actionPromises);
 
+        const analysisContent = analysis.conversationalResponse 
+          ? analysis.conversationalResponse
+          : "Analysis complete! I've extracted key information from the document. Please review the extracted data in the documents and approve or reject the suggested actions.";
+
         const [analysisMessage] = await db
           .insert(chatMessages)
           .values({
             caseId,
             role: "assistant",
-            content: "Analysis complete! I've extracted key information from the document. Please review the extracted data in the documents and approve or reject the suggested actions.",
+            content: analysisContent,
             isAnalysis: true,
           })
           .returning();
