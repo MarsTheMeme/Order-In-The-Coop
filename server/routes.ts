@@ -347,5 +347,40 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.get("/api/deadlines", async (_req: Request, res: Response) => {
+    try {
+      const allExtractedData = await db
+        .select({
+          extracted: extractedData,
+          document: documents,
+          case: cases,
+        })
+        .from(extractedData)
+        .innerJoin(documents, eq(extractedData.documentId, documents.id))
+        .innerJoin(cases, eq(documents.caseId, cases.id));
+      
+      const deadlinesWithCases = allExtractedData.flatMap((item) => {
+        const deadlines = item.extracted.deadlines as Array<{ date: string; description: string; priority: "high" | "medium" | "low" }> | null;
+        
+        if (!deadlines || !Array.isArray(deadlines)) {
+          return [];
+        }
+        
+        return deadlines.map((deadline) => ({
+          ...deadline,
+          caseName: item.case.name,
+          caseId: item.case.id,
+          caseNumber: item.case.caseNumber,
+          documentName: item.document.fileName,
+        }));
+      });
+      
+      res.json(deadlinesWithCases);
+    } catch (error: any) {
+      console.error("Error fetching deadlines:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }
