@@ -34,13 +34,16 @@ Preferred communication style: Simple, everyday language.
 - ChatInterface: Message handling with document attachment pills above input, inline controls (attach, voice, send)
 - FileUploadZone: Drag-and-drop file upload supporting multiple formats
 - ExtractedDataCard: Displays parsed legal information (case numbers, parties, deadlines, facts)
-- ActionApprovalCard: Human-in-the-loop approval system for AI-suggested actions
+- ActionApprovalCard: Human-in-the-loop approval system for AI-suggested actions with approve/reject buttons
+- ApprovalsTab: Displays approved actions grouped by case with full context (document filename, rationale, priority, approval date)
 - AppSidebar: Case navigation sidebar with search bar, real-time filtering, and text highlighting of matches
 
 **Navigation & Search:**
 - Sidebar contains search bar for filtering active cases by name or case number
 - Real-time text highlighting of matched search terms using proper regex escaping
 - Tab-based navigation (Chat, Documents, Approvals, Deadlines) in main content area
+- Documents tab shows only pending suggested actions
+- Approvals tab shows only approved actions grouped by case
 - Dynamic case name display updates automatically when switching between cases
 
 ### Backend Architecture
@@ -102,12 +105,36 @@ Preferred communication style: Simple, everyday language.
 ### Human-in-the-Loop Workflow
 
 **Design Principle:** AI suggestions require explicit human approval before execution
-- Suggested actions displayed with title, description, rationale, and priority
-- Three-state approval: pending → approved/rejected
-- Visual indicators (badges, priority icons) guide decision-making
-- Audit trail maintained through status field in database
 
-**Rationale:** Legal work demands verification and accountability. This prevents automated AI actions while accelerating decision-making through structured recommendations.
+**Workflow States:**
+- **Pending**: AI-generated actions appear in Documents tab with approve/reject buttons
+- **Approved**: User clicks approve → action moves to Approvals tab as a permanent reminder grouped by case
+- **Rejected**: User clicks reject → action is deleted entirely from the system
+
+**Approval Flow:**
+1. User reviews pending action in Documents tab
+2. Clicks approve button → PATCH /api/actions/:id updates status to "approved"
+3. Action disappears from Documents tab
+4. Action appears in Approvals tab grouped by case with full context:
+   - Action title, description, and rationale
+   - Priority badge (high/medium/low)
+   - Source document filename
+   - Approval date
+5. Approved actions persist as reminders for legal team
+
+**Rejection Flow:**
+1. User reviews pending action in Documents tab
+2. Clicks reject button → DELETE /api/actions/:id removes action from database
+3. Action disappears from Documents tab
+4. Action does NOT appear in Approvals tab (deleted entirely)
+
+**Visual Indicators:**
+- Priority badges (high/medium/low) guide urgency assessment
+- Toast notifications confirm approve/reject actions
+- Empty state messaging when no approvals exist
+- Case grouping organizes approved actions by legal matter
+
+**Rationale:** Legal work demands verification and accountability. This prevents automated AI actions while accelerating decision-making through structured recommendations. The Approvals tab serves as a permanent reminder system for verified actions that require follow-up.
 
 ## External Dependencies
 
