@@ -31,16 +31,10 @@ Preferred communication style: Simple, everyday language.
 - Spacing primitives based on Tailwind units (3, 4, 6, 8, 12)
 
 **Key Components:**
-- ChatInterface: Message handling with document attachment pills above input, inline controls (attach, voice, send)
+- ChatInterface: Message handling with left-aligned user messages, right-aligned AI responses
 - FileUploadZone: Drag-and-drop file upload supporting multiple formats
 - ExtractedDataCard: Displays parsed legal information (case numbers, parties, deadlines, facts)
 - ActionApprovalCard: Human-in-the-loop approval system for AI-suggested actions
-- AppSidebar: Case navigation sidebar showing active cases list only (Navigation section removed)
-
-**Navigation Structure:**
-- Sidebar: Shows only "Active Cases" list for switching between cases
-- Main Content: Tab-based navigation (Chat, Documents, Approvals, Deadlines) within each case
-- Dynamic case name display updates when switching between cases
 
 ### Backend Architecture
 
