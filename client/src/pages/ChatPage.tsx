@@ -170,16 +170,22 @@ export default function ChatPage({ caseId }: ChatPageProps) {
       </div>
 
       {mappedExtractedData && (
-        <div className="border-t p-4 bg-muted/30">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <ExtractedDataCard data={mappedExtractedData} />
-            {mappedActions.length > 0 && (
-              <ActionApprovalCard
-                actions={mappedActions}
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
-            )}
+        <div 
+          className="border-t bg-muted/30 max-h-[400px] overflow-y-auto flex-shrink-0"
+          data-testid="extracted-data-panel"
+          style={{ maxHeight: '400px', overflowY: 'auto' }}
+        >
+          <div className="p-4">
+            <div className="max-w-4xl mx-auto space-y-4">
+              <ExtractedDataCard data={mappedExtractedData} />
+              {mappedActions.length > 0 && (
+                <ActionApprovalCard
+                  actions={mappedActions}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
