@@ -172,7 +172,10 @@ export function registerRoutes(app: Express): Server {
           return res.status(400).json({ error: "No file uploaded" });
         }
 
+        console.log("[DEBUG] req.body:", req.body);
+        console.log("[DEBUG] req.body.userInstructions:", req.body.userInstructions);
         const userInstructions = req.body.userInstructions?.trim() || undefined;
+        console.log("[DEBUG] Extracted userInstructions:", userInstructions);
 
         const fileUrl = await uploadFile(req.file);
 
@@ -209,6 +212,7 @@ export function registerRoutes(app: Express): Server {
         }
 
         const analysis = await analyzeDocument(documentText, req.file.originalname, userInstructions);
+        console.log("[DEBUG] Analysis completed. Has conversational response:", !!analysis.conversationalResponse);
 
         const [extracted] = await db
           .insert(extractedData)

@@ -92,6 +92,7 @@ Provide only the JSON response, no other text.`;
   }
 
   if (userInstructions) {
+    console.log("[DEBUG] User provided instructions:", userInstructions);
     const responsePrompt = `You are Tender, an AI legal assistant. A user just uploaded a document and asked you to: "${userInstructions}"
 
 Based on the analysis you performed, here's what you found:
@@ -102,12 +103,14 @@ Based on the analysis you performed, here's what you found:
 
 Provide a helpful, conversational response that directly answers the user's request. Be specific and reference the information you found. If you found the information they asked for, present it clearly. If not, explain what you did find. Keep it concise and professional.`;
 
+    console.log("[DEBUG] Generating conversational response...");
     const responseResult = await genAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: responsePrompt,
     });
 
     analysis.conversationalResponse = responseResult.text || "";
+    console.log("[DEBUG] Conversational response generated:", analysis.conversationalResponse?.substring(0, 100));
   }
 
   return analysis;
