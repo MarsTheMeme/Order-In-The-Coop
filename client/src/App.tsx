@@ -1,6 +1,6 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,41 +10,31 @@ import ChatPage from "@/pages/ChatPage";
 import NotFound from "@/pages/not-found";
 import { useState } from "react";
 
-function Router() {
+function Router({ activeCaseId }: { activeCaseId: string }) {
   return (
     <Switch>
-      <Route path="/" component={ChatPage} />
+      <Route path="/">
+        {() => <ChatPage caseId={parseInt(activeCaseId)} />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-export default function App() {
+function AppContent() {
   const [activeCase, setActiveCase] = useState<string | null>("1");
-  
-  const mockCases = [
-    {
-      id: "1",
-      name: "Johnson v. MegaCorp",
-      caseNumber: "CV-2024-001234",
-      documentCount: 24,
-      pendingApprovals: 3,
-    },
-    {
-      id: "2",
-      name: "Smith Medical Malpractice",
-      caseNumber: "CV-2024-005678",
-      documentCount: 18,
-      pendingApprovals: 0,
-    },
-    {
-      id: "3",
-      name: "Rodriguez Employment",
-      caseNumber: "CV-2024-009012",
-      documentCount: 12,
-      pendingApprovals: 1,
-    },
-  ];
+
+  const { data: cases = [] } = useQuery<
+    Array<{
+      id: string;
+      name: string;
+      caseNumber: string;
+      documentCount: number;
+      pendingApprovals: number;
+    }>
+  >({
+    queryKey: ["/api/cases"],
+  });
 
   const style = {
     "--sidebar-width": "20rem",
@@ -52,29 +42,35 @@ export default function App() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SidebarProvider style={style as React.CSSProperties}>
-          <div className="flex h-screen w-full">
-            <AppSidebar
-              cases={mockCases}
-              activeCase={activeCase}
-              onCaseSelect={setActiveCase}
-              onNewCase={() => console.log("New case")}
-            />
-            <div className="flex flex-col flex-1">
-              <header className="flex items-center justify-between p-3 border-b">
-                <SidebarTrigger data-testid="button-sidebar-toggle" />
-                <ThemeToggle />
-              </header>
-              <main className="flex-1 overflow-hidden">
-                <Router />
-              </main>
-            </div>
+    <TooltipProvider>
+      <SidebarProvider style={style as React.CSSProperties}>
+        <div className="flex h-screen w-full">
+          <AppSidebar
+            cases={cases}
+            activeCase={activeCase}
+            onCaseSelect={setActiveCase}
+            onNewCase={() => console.log("New case")}
+          />
+          <div className="flex flex-col flex-1">
+            <header className="flex items-center justify-between p-3 border-b">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <ThemeToggle />
+            </header>
+            <main className="flex-1 overflow-hidden">
+              <Router activeCaseId={activeCase || "1"} />
+            </main>
           </div>
-        </SidebarProvider>
-        <Toaster />
-      </TooltipProvider>
+        </div>
+      </SidebarProvider>
+      <Toaster />
+    </TooltipProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
     </QueryClientProvider>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { ChatInterface } from "@/components/ChatInterface";
 import { FileUploadZone } from "@/components/FileUploadZone";
 import { ExtractedDataCard } from "@/components/ExtractedDataCard";
@@ -15,134 +16,131 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
-export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessageProps[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+interface ChatPageProps {
+  caseId: number;
+}
+
+export default function ChatPage({ caseId }: ChatPageProps) {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
-  const [actions, setActions] = useState<ActionItem[]>([]);
+  const { toast } = useToast();
+
+  const { data: messages = [], isLoading: messagesLoading } = useQuery<ChatMessageProps[]>({
+    queryKey: ["/api/cases", caseId, "messages"],
+  });
+
+  const { data: extractedDataList = [] } = useQuery<
+    Array<{
+      extracted: ExtractedData & {
+        parties: string[];
+        deadlines: Array<{ date: string; description: string; priority: "high" | "medium" | "low" }>;
+        keyFacts: string[];
+      };
+    }>
+  >({
+    queryKey: ["/api/cases", caseId, "extracted-data"],
+  });
+
+  const { data: actions = [] } = useQuery<ActionItem[]>({
+    queryKey: ["/api/cases", caseId, "actions"],
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      return apiRequest(`/api/cases/${caseId}/messages`, "POST", {
+        role: "user",
+        content,
+        isAnalysis: false,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "messages"] });
+    },
+  });
+
+  const uploadDocumentMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`/api/cases/${caseId}/documents`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "extracted-data"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
+      toast({
+        title: "Document analyzed",
+        description: "Tender has finished analyzing your document.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateActionMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      return apiRequest(`/api/actions/${id}`, "PATCH", { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
+    },
+  });
 
   const handleSendMessage = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: message,
-        timestamp,
-      },
-    ]);
-
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "I can help you with that. Would you like to upload a document for analysis?",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-    }, 800);
+    sendMessageMutation.mutate(message);
   };
 
   const handleFilesSelected = (files: File[]) => {
     setShowUploadDialog(false);
-    setIsProcessing(true);
-
-    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: `Uploaded: ${files.map((f) => f.name).join(", ")}`,
-        timestamp,
-      },
-    ]);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      
-      const mockExtracted: ExtractedData = {
-        caseNumber: "CV-2024-001234",
-        parties: [
-          "Plaintiff: Maria Johnson",
-          "Defendant: MegaCorp Industries LLC",
-        ],
-        deadlines: [
-          {
-            date: "November 15, 2024",
-            description: "Motion to Compel Discovery",
-            priority: "high",
-          },
-        ],
-        keyFacts: [
-          "Plaintiff alleges wrongful termination",
-          "Email evidence available from HR department",
-        ],
-        confidence: 0.92,
-      };
-
-      const mockActions: ActionItem[] = [
-        {
-          id: "1",
-          title: "Request Email Records",
-          description: "File formal discovery request for email correspondence",
-          rationale: "Witness testimony mentions email evidence supporting the claim.",
-          priority: "high",
-          status: "pending",
-        },
-      ];
-
-      setExtractedData(mockExtracted);
-      setActions(mockActions);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Analysis complete! I've extracted key information from the document. Please review the extracted data below and approve or reject the suggested actions.",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          isAnalysis: true,
-        },
-      ]);
-    }, 2000);
+    files.forEach((file) => {
+      uploadDocumentMutation.mutate(file);
+    });
   };
 
   const handleApprove = (id: string) => {
-    setActions((prev) =>
-      prev.map((action) =>
-        action.id === id ? { ...action, status: "approved" as const } : action
-      )
-    );
-    
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: "Action approved! I'll proceed with this task.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      },
-    ]);
+    updateActionMutation.mutate({ id: parseInt(id), status: "approved" });
   };
 
   const handleReject = (id: string) => {
-    setActions((prev) =>
-      prev.map((action) =>
-        action.id === id ? { ...action, status: "rejected" as const } : action
-      )
-    );
-    
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: "Action rejected. I won't proceed with this task.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      },
-    ]);
+    updateActionMutation.mutate({ id: parseInt(id), status: "rejected" });
   };
+
+  const latestExtractedData = extractedDataList[0]?.extracted;
+  const mappedExtractedData = latestExtractedData
+    ? {
+        caseNumber: latestExtractedData.caseNumber || undefined,
+        parties: latestExtractedData.parties,
+        deadlines: latestExtractedData.deadlines,
+        keyFacts: latestExtractedData.keyFacts,
+        confidence: parseFloat(latestExtractedData.confidence || "0"),
+      }
+    : null;
+
+  const mappedActions = actions.map((action) => ({
+    id: action.id.toString(),
+    title: action.title,
+    description: action.description,
+    rationale: action.rationale,
+    priority: action.priority as "high" | "medium" | "low",
+    status: action.status as "pending" | "approved" | "rejected",
+  }));
 
   return (
     <div className="flex flex-col h-full">
@@ -167,17 +165,17 @@ export default function ChatPage() {
         <ChatInterface
           messages={messages}
           onSendMessage={handleSendMessage}
-          isProcessing={isProcessing}
+          isProcessing={sendMessageMutation.isPending || uploadDocumentMutation.isPending}
         />
       </div>
 
-      {extractedData && (
+      {mappedExtractedData && (
         <div className="border-t p-4 bg-muted/30">
           <div className="max-w-4xl mx-auto space-y-4">
-            <ExtractedDataCard data={extractedData} />
-            {actions.length > 0 && (
+            <ExtractedDataCard data={mappedExtractedData} />
+            {mappedActions.length > 0 && (
               <ActionApprovalCard
-                actions={actions}
+                actions={mappedActions}
                 onApprove={handleApprove}
                 onReject={handleReject}
               />
@@ -191,7 +189,7 @@ export default function ChatPage() {
           <DialogHeader>
             <DialogTitle>Upload Case Documents</DialogTitle>
             <DialogDescription>
-              Upload transcripts, emails, or other case documents for AI analysis
+              Upload transcripts, emails, or other case documents for AI analysis by Tender
             </DialogDescription>
           </DialogHeader>
           <FileUploadZone onFilesSelected={handleFilesSelected} />
