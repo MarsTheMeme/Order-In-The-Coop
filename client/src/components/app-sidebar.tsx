@@ -1,4 +1,5 @@
 import { FileText, MessageSquare, CheckSquare, Clock, Settings, Plus } from "lucide-react";
+import chickenLogo from "@assets/image_1761371205289.png";
 import {
   Sidebar,
   SidebarContent,
@@ -58,12 +59,10 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase }: AppSi
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground font-semibold">
-            LA
-          </div>
+          <img src={chickenLogo} alt="Tender" className="w-9 h-9 rounded-md" />
           <div>
-            <h2 className="text-lg font-semibold">LegalAI</h2>
-            <p className="text-xs text-muted-foreground">Assistant</p>
+            <h2 className="text-lg font-semibold">Order In The Coop</h2>
+            <p className="text-xs text-muted-foreground">with Tender</p>
           </div>
         </div>
       </SidebarHeader>
