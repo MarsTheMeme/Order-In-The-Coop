@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ChatInterface } from "@/components/ChatInterface";
 import { FileUploadZone } from "@/components/FileUploadZone";
@@ -14,8 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { MessageSquare, FileText, CheckSquare, Clock, Upload } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,10 +40,13 @@ export default function ChatPage({ caseId }: ChatPageProps) {
 
   const { data: extractedDataList = [] } = useQuery<
     Array<{
-      extracted: ExtractedData & {
+      extracted: {
+        id: number;
+        caseNumber: string | null;
         parties: string[];
         deadlines: Array<{ date: string; description: string; priority: "high" | "medium" | "low" }>;
         keyFacts: string[];
+        confidence: string | null;
       };
     }>
   >({
@@ -149,7 +153,7 @@ export default function ChatPage({ caseId }: ChatPageProps) {
         parties: latestExtractedData.parties,
         deadlines: latestExtractedData.deadlines,
         keyFacts: latestExtractedData.keyFacts,
-        confidence: parseFloat(latestExtractedData.confidence || "0"),
+        confidence: latestExtractedData.confidence ? parseFloat(latestExtractedData.confidence) : undefined,
       }
     : null;
 
@@ -181,37 +185,106 @@ export default function ChatPage({ caseId }: ChatPageProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        <ChatInterface
-          messages={messages}
-          onSendMessage={handleSendMessage}
-          isProcessing={sendMessageMutation.isPending || uploadDocumentMutation.isPending}
-          attachedDocuments={attachedDocuments}
-          onAttachDocument={handleAttachDocument}
-          onRemoveDocument={handleRemoveDocument}
-        />
-      </div>
+      <Tabs defaultValue="chat" className="flex-1 flex flex-col overflow-hidden">
+        <div className="border-b px-4">
+          <div className="max-w-4xl mx-auto">
+            <TabsList className="bg-transparent h-auto p-0 space-x-6" data-testid="tabs-navigation">
+              <TabsTrigger 
+                value="chat" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-0 pb-3 gap-2"
+                data-testid="tab-chat"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Chat
+              </TabsTrigger>
+              <TabsTrigger 
+                value="documents" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-0 pb-3 gap-2"
+                data-testid="tab-documents"
+              >
+                <FileText className="w-4 h-4" />
+                Documents
+              </TabsTrigger>
+              <TabsTrigger 
+                value="approvals" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-0 pb-3 gap-2"
+                data-testid="tab-approvals"
+              >
+                <CheckSquare className="w-4 h-4" />
+                Approvals
+              </TabsTrigger>
+              <TabsTrigger 
+                value="deadlines" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-0 pb-3 gap-2"
+                data-testid="tab-deadlines"
+              >
+                <Clock className="w-4 h-4" />
+                Deadlines
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
 
-      {mappedExtractedData && (
-        <div 
-          className="border-t bg-muted/30 max-h-[400px] overflow-y-auto flex-shrink-0"
-          data-testid="extracted-data-panel"
-          style={{ maxHeight: '400px', overflowY: 'auto' }}
-        >
-          <div className="p-4">
-            <div className="max-w-4xl mx-auto space-y-4">
-              <ExtractedDataCard data={mappedExtractedData} />
-              {mappedActions.length > 0 && (
-                <ActionApprovalCard
-                  actions={mappedActions}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                />
+        <TabsContent value="chat" className="flex-1 overflow-hidden m-0 mt-0">
+          <ChatInterface
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            isProcessing={sendMessageMutation.isPending || uploadDocumentMutation.isPending}
+            attachedDocuments={attachedDocuments}
+            onAttachDocument={handleAttachDocument}
+            onRemoveDocument={handleRemoveDocument}
+          />
+        </TabsContent>
+
+        <TabsContent value="documents" className="flex-1 overflow-y-auto m-0" data-testid="tab-content-documents">
+          <div className="p-6">
+            <div className="max-w-4xl mx-auto space-y-6">
+              {mappedExtractedData ? (
+                <>
+                  <ExtractedDataCard data={mappedExtractedData} />
+                  {mappedActions.length > 0 && (
+                    <ActionApprovalCard
+                      actions={mappedActions}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No documents uploaded yet.</p>
+                  <p className="text-sm mt-2">Upload a document to see extracted information.</p>
+                </div>
               )}
             </div>
           </div>
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="approvals" className="flex-1 overflow-y-auto m-0" data-testid="tab-content-approvals">
+          <div className="p-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center py-12 text-muted-foreground">
+                <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">Approvals</h3>
+                <p>Action approval workflow coming soon.</p>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="deadlines" className="flex-1 overflow-y-auto m-0" data-testid="tab-content-deadlines">
+          <div className="p-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center py-12 text-muted-foreground">
+                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">Deadlines</h3>
+                <p>Deadline tracking and calendar coming soon.</p>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent className="max-w-2xl">
