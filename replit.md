@@ -19,9 +19,9 @@ Preferred communication style: Simple, everyday language.
 ### Backend
 - **Server Framework**: Express.js with TypeScript, Node.js, ESM modules.
 - **API Design**: RESTful endpoints, Multer for file uploads (in-memory storage), request/response logging.
-- **File Processing Pipeline**: Uploaded files undergo text extraction (pdf-parse, mammoth, xlsx library) or direct multimodal processing (for PDFs with Gemini). Extracted text/PDFs are sent to Gemini AI, structured responses are parsed and stored, and file metadata is saved.
+- **File Processing Pipeline**: Supports single or multiple file uploads in one batch. Uploaded files undergo text extraction (pdf-parse, mammoth, xlsx library) or direct multimodal processing (for PDFs with Gemini). All files in a batch are sent to Gemini AI together for unified analysis. Structured responses are parsed and stored, and file metadata is saved.
 - **Supported File Formats**: PDF (multimodal vision processing via Gemini), DOCX/DOC, Excel (.xlsx, .xls), CSV, TXT. Images are supported for upload but OCR is planned for future.
-- **AI Integration**: Google Gemini AI (gemini-2.5-flash model) for document analysis, multimodal vision processing for PDFs, context-aware prompts including user instructions, JSON response format for structured data, and conversational responses for specific user queries.
+- **AI Integration**: Google Gemini AI (gemini-2.5-flash model) for document analysis, multimodal vision processing for PDFs, batch analysis of multiple documents in single request, context-aware prompts including user instructions, JSON response format for structured data, and conversational responses for specific user queries. When multiple files are uploaded, Gemini analyzes all documents together and returns unified results combining information from all files.
 
 ### Data Storage
 - **Database**: PostgreSQL via Neon serverless driver, Drizzle ORM for type-safe queries and schema.

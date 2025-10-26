@@ -27,7 +27,8 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
   
   if (fileType === "application/pdf") {
     try {
-      const { default: pdfParse } = await import("pdf-parse");
+      const pdfParseModule: any = await import("pdf-parse");
+      const pdfParse = pdfParseModule.default || pdfParseModule;
       const data = await pdfParse(file.buffer);
       return data.text;
     } catch (error) {
