@@ -12,6 +12,7 @@ import { FileText } from "lucide-react";
 import backgroundImage from "@assets/9285857_1761446302544.jpg";
 import chickenLogo from "@assets/tender-removebg-preview_1761446543382.png";
 import ShinyText from "@/components/ShinyText";
+import SplitText from "@/components/SplitText";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -113,9 +114,20 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 style={{ imageRendering: 'pixelated' }}
               />
             </div>
-            <h1 className="text-3xl font-semibold text-white" data-testid="text-app-title">
-              Order In The Coop
-            </h1>
+            <SplitText
+              text="Order In The Coop"
+              className="text-3xl font-semibold text-white"
+              delay={80}
+              duration={0.5}
+              ease="power3.out"
+              splitType="chars"
+              from={{ opacity: 0, y: 30 }}
+              to={{ opacity: 1, y: 0 }}
+              threshold={0.1}
+              rootMargin="0px"
+              tag="h1"
+              textAlign="center"
+            />
           </div>
           <div className="text-base flex justify-center">
             <ShinyText 
