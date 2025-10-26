@@ -129,36 +129,38 @@ export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png
         <div className="space-y-4">
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Selected Files</h4>
-            {uploadedFiles.map((file) => (
-              <Card key={file.id} className="p-3" data-testid={`file-item-${file.id}`}>
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-xl">{getFileIcon(file.type)}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{formatFileSize(file.size)}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          Ready
-                        </Badge>
+            <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+              {uploadedFiles.map((file) => (
+                <Card key={file.id} className="p-3" data-testid={`file-item-${file.id}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-xl">{getFileIcon(file.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{formatFileSize(file.size)}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            Ready
+                          </Badge>
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile(file.id);
+                      }}
+                      data-testid={`button-remove-${file.id}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 flex-shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFile(file.id);
-                    }}
-                    data-testid={`button-remove-${file.id}`}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </div>
           
           <div className="space-y-2">
