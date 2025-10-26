@@ -8,8 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RegisterUser, LoginUser } from "@shared/schema";
-import { Scale, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import backgroundImage from "@assets/9285857_1761446302544.jpg";
+import chickenLogo from "@assets/NEWChickenlogo_1761446394515.png";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -103,8 +104,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-md bg-white/10 backdrop-blur-sm flex items-center justify-center">
-              <Scale className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 flex-shrink-0">
+              <img 
+                src={chickenLogo} 
+                alt="Tender" 
+                className="w-full h-full object-contain" 
+                style={{ imageRendering: 'pixelated' }}
+              />
             </div>
             <h1 className="text-3xl font-semibold text-white" data-testid="text-app-title">
               Order In The Coop
