@@ -133,6 +133,121 @@ Provide a helpful, conversational response that directly answers the user's requ
   return analysis;
 }
 
+export interface FileInfo {
+  fileName: string;
+  text: string;
+  buffer?: Buffer;
+  mimeType: string;
+}
+
+export async function analyzeMultipleDocuments(
+  files: FileInfo[],
+  userInstructions?: string
+): Promise<DocumentAnalysis> {
+  const instructionsSection = userInstructions 
+    ? `\n\nUSER'S SPECIFIC INSTRUCTIONS: ${userInstructions}\nPay special attention to these instructions while analyzing the documents. Tailor your extraction and suggested actions to address what the user is asking for.\n`
+    : '';
+
+  const basePrompt = `You are Tender, an AI legal assistant helping plaintiff legal teams process case documents.${instructionsSection}
+
+Analyze the following ${files.length} legal document${files.length > 1 ? 's' : ''} and extract comprehensive information from ALL documents:
+
+1. Case Number (if mentioned in any document)
+2. Parties Involved (plaintiff, defendant, counsel, witnesses from all documents)
+3. Critical Deadlines (dates with descriptions and priority: high/medium/low from all documents)
+4. Key Facts (important facts, evidence, or testimony from all documents)
+5. Suggested Actions (specific next steps based on information across all documents)
+
+For PDF documents, analyze ALL visual content (images, photos, diagrams, charts) along with text to extract comprehensive information.
+
+For each suggested action, provide:
+- A clear title
+- Detailed description
+- Rationale explaining why this action is important
+- Priority level (high/medium/low)
+
+Return your analysis in valid JSON format with this structure:
+{
+  "caseNumber": "string or null",
+  "parties": ["string array"],
+  "deadlines": [{"date": "string", "description": "string", "priority": "high|medium|low"}],
+  "keyFacts": ["string array"],
+  "confidence": 0.0-1.0,
+  "suggestedActions": [{
+    "title": "string",
+    "description": "string", 
+    "rationale": "string",
+    "priority": "high|medium|low"
+  }]
+}
+
+Documents to analyze:
+${files.map((f, i) => `\nDocument ${i + 1}: ${f.fileName}`).join('')}
+
+Provide only the JSON response, no other text.`;
+
+  let contents: any[] = [{ text: basePrompt }];
+  
+  for (const file of files) {
+    if (file.buffer) {
+      console.log(`[PDF Vision] Adding PDF to batch: ${file.fileName}`);
+      contents.push({
+        inlineData: {
+          mimeType: file.mimeType,
+          data: file.buffer.toString('base64')
+        }
+      });
+    } else {
+      contents.push({
+        text: `\n--- ${file.fileName} ---\n${file.text}\n---`
+      });
+    }
+  }
+
+  const result = await genAI.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents,
+  });
+  
+  const text = result.text || "";
+
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Failed to extract JSON from AI response");
+  }
+
+  const analysis: DocumentAnalysis = JSON.parse(jsonMatch[0]);
+  
+  if (!analysis.confidence) {
+    analysis.confidence = 0.85;
+  }
+
+  if (userInstructions) {
+    console.log("[DEBUG] User provided instructions for batch analysis:", userInstructions);
+    const fileList = files.map(f => f.fileName).join(", ");
+    const responsePrompt = `You are Tender, an AI legal assistant. A user just uploaded ${files.length} document${files.length > 1 ? 's' : ''} (${fileList}) and asked you to: "${userInstructions}"
+
+Based on the analysis you performed across all documents, here's what you found:
+- Case Number: ${analysis.caseNumber || "Not found"}
+- Parties: ${analysis.parties?.join(", ") || "Not found"}
+- Deadlines: ${analysis.deadlines?.map(d => `${d.description} (${d.date})`).join(", ") || "Not found"}
+- Key Facts: ${analysis.keyFacts?.slice(0, 5).join("; ") || "Not found"}
+
+Provide a helpful, conversational response that directly answers the user's request. Mention that you analyzed all ${files.length} documents together. Be specific and reference the information you found. If you found the information they asked for, present it clearly. If not, explain what you did find. Keep it concise and professional.`;
+
+    console.log("[DEBUG] Generating conversational response for batch...");
+    const responseResult = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: responsePrompt,
+    });
+
+    analysis.conversationalResponse = responseResult.text || "";
+    console.log("[DEBUG] Conversational response generated:", analysis.conversationalResponse?.substring(0, 100));
+  }
+
+  return analysis;
+}
+
 export async function chatWithTender(
   message: string,
   context?: string

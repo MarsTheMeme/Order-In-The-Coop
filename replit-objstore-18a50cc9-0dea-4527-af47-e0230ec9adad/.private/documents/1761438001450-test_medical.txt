@@ -1,0 +1,35 @@
+MEDICAL RECORD SUMMARY
+
+Case: Johnson v. Metro Hospital
+Case Number: MED-2024-555123
+
+Patient: Robert Johnson
+Date of Incident: February 10, 2024
+Treatment Date: February 10-15, 2024
+
+PARTIES:
+- Plaintiff: Robert Johnson
+- Defendant: Metro Hospital
+- Treating Physician: Dr. Sarah Martinez
+- Expert Witness: Dr. Michael Chen
+
+DIAGNOSIS:
+- Fractured right femur
+- Soft tissue damage
+- Post-operative complications
+
+TREATMENT COSTS:
+- Emergency room: $15,000
+- Surgery: $85,000
+- Hospital stay (5 days): $25,000
+- Physical therapy (ongoing): $12,000
+- Total medical costs: $137,000
+
+CRITICAL DATES:
+- Follow-up appointment: April 5, 2024
+- Expert deposition: April 20, 2024
+- Trial date: June 15, 2024
+
+PROGNOSIS:
+Patient expected to require 6-12 months of physical therapy.
+Permanent disability rating pending final medical evaluation.

@@ -98,9 +98,13 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
   });
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async ({ file, userInstructions }: { file: File; userInstructions?: string }) => {
+    mutationFn: async ({ files, userInstructions }: { files: File[]; userInstructions?: string }) => {
       const formData = new FormData();
-      formData.append("file", file);
+      
+      files.forEach(file => {
+        formData.append("files", file);
+      });
+      
       if (userInstructions && userInstructions.trim()) {
         formData.append("userInstructions", userInstructions.trim());
       }
@@ -111,7 +115,8 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Upload failed");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
       }
 
       return response.json();
@@ -121,16 +126,18 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "extracted-data"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseId, "actions"] });
       
-      setAttachedDocuments(prev => [...prev, {
-        id: data.document?.id?.toString() || Date.now().toString(),
-        name: variables.file.name
-      }]);
+      const newDocs = (data.documents || []).map((doc: any) => ({
+        id: doc.id?.toString() || Date.now().toString(),
+        name: doc.fileName
+      }));
+      
+      setAttachedDocuments(prev => [...prev, ...newDocs]);
       
       toast({
-        title: "Document analyzed",
+        title: `${variables.files.length} document${variables.files.length > 1 ? 's' : ''} analyzed`,
         description: variables.userInstructions 
           ? "Analysis completed with your instructions."
-          : "You can now ask questions about this document.",
+          : "You can now ask questions about these documents.",
       });
     },
     onError: (error: Error) => {
@@ -175,9 +182,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
 
   const handleFilesSelected = (files: File[], userInstructions?: string) => {
     setShowUploadDialog(false);
-    files.forEach((file) => {
-      uploadDocumentMutation.mutate({ file, userInstructions });
-    });
+    uploadDocumentMutation.mutate({ files, userInstructions });
   };
 
   const handleAttachDocument = () => {

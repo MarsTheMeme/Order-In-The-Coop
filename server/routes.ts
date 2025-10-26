@@ -15,7 +15,7 @@ import {
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import multer from "multer";
-import { analyzeDocument, chatWithTender } from "./gemini";
+import { analyzeDocument, analyzeMultipleDocuments, chatWithTender } from "./gemini";
 import { uploadFile, getFileUrl, deleteFile } from "./objectStorage";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
@@ -186,36 +186,68 @@ export function registerRoutes(app: Express): Server {
 
   app.post(
     "/api/cases/:id/documents",
-    upload.single("file"),
+    upload.array("files"),
     async (req: Request, res: Response) => {
       try {
         const caseId = parseInt(req.params.id);
         
-        if (!req.file) {
-          return res.status(400).json({ error: "No file uploaded" });
+        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+          return res.status(400).json({ error: "No files uploaded" });
         }
 
         console.log("[DEBUG] req.body:", req.body);
         console.log("[DEBUG] req.body.userInstructions:", req.body.userInstructions);
+        console.log(`[DEBUG] Received ${req.files.length} file(s)`);
         const userInstructions = req.body.userInstructions?.trim() || undefined;
         console.log("[DEBUG] Extracted userInstructions:", userInstructions);
 
-        const fileUrl = await uploadFile(req.file);
+        const fileInfos: Array<{ fileName: string; text: string; buffer?: Buffer; mimeType: string }> = [];
+        const documentRecords: any[] = [];
 
-        const [document] = await db
-          .insert(documents)
-          .values({
-            caseId,
-            fileName: req.file.originalname,
-            fileType: req.file.mimetype,
-            fileSize: req.file.size,
-            storageUrl: fileUrl,
-          })
-          .returning();
+        for (const file of req.files) {
+          const fileUrl = await uploadFile(file);
 
+          const [document] = await db
+            .insert(documents)
+            .values({
+              caseId,
+              fileName: file.originalname,
+              fileType: file.mimetype,
+              fileSize: file.size,
+              storageUrl: fileUrl,
+            })
+            .returning();
+
+          documentRecords.push(document);
+
+          const isPDF = file.mimetype === "application/pdf";
+          
+          if (isPDF) {
+            fileInfos.push({
+              fileName: file.originalname,
+              text: "",
+              buffer: file.buffer,
+              mimeType: file.mimetype
+            });
+          } else {
+            const documentText = await extractTextFromFile(file);
+            if (!documentText || documentText.trim().length < 50) {
+              return res.status(400).json({ 
+                error: `Could not extract text from ${file.originalname}. Please ensure the document contains readable text.` 
+              });
+            }
+            fileInfos.push({
+              fileName: file.originalname,
+              text: documentText,
+              mimeType: file.mimetype
+            });
+          }
+        }
+
+        const fileNames = req.files.map(f => f.originalname).join(", ");
         const uploadMessage = userInstructions
-          ? `Uploaded document: ${req.file.originalname}\nInstructions: ${userInstructions}`
-          : `Uploaded document: ${req.file.originalname}`;
+          ? `Uploaded ${req.files.length} document${req.files.length > 1 ? 's' : ''}: ${fileNames}\nInstructions: ${userInstructions}`
+          : `Uploaded ${req.files.length} document${req.files.length > 1 ? 's' : ''}: ${fileNames}`;
 
         await db
           .insert(chatMessages)
@@ -226,30 +258,16 @@ export function registerRoutes(app: Express): Server {
             isAnalysis: false,
           });
 
-        const isPDF = req.file.mimetype === "application/pdf";
-        
-        let documentText = "";
-        if (!isPDF) {
-          documentText = await extractTextFromFile(req.file);
-          if (!documentText || documentText.trim().length < 50) {
-            return res.status(400).json({ 
-              error: "Could not extract text from document. Please ensure the document contains readable text." 
-            });
-          }
-        }
-
-        const analysis = await analyzeDocument(
-          documentText, 
-          req.file.originalname, 
-          userInstructions,
-          isPDF ? req.file.buffer : undefined
+        const analysis = await analyzeMultipleDocuments(
+          fileInfos,
+          userInstructions
         );
-        console.log("[DEBUG] Analysis completed. Has conversational response:", !!analysis.conversationalResponse);
+        console.log("[DEBUG] Batch analysis completed. Has conversational response:", !!analysis.conversationalResponse);
 
         const [extracted] = await db
           .insert(extractedData)
           .values({
-            documentId: document.id,
+            documentId: documentRecords[0].id,
             caseNumber: analysis.caseNumber,
             parties: analysis.parties || [],
             deadlines: analysis.deadlines || [],
@@ -276,7 +294,7 @@ export function registerRoutes(app: Express): Server {
 
         const analysisContent = analysis.conversationalResponse 
           ? analysis.conversationalResponse
-          : "Analysis complete! I've extracted key information from the document. Please review the extracted data in the documents and approve or reject the suggested actions.";
+          : `Analysis complete! I've extracted key information from ${req.files.length} document${req.files.length > 1 ? 's' : ''}. Please review the extracted data in the documents and approve or reject the suggested actions.`;
 
         const [analysisMessage] = await db
           .insert(chatMessages)
@@ -289,7 +307,7 @@ export function registerRoutes(app: Express): Server {
           .returning();
 
         res.json({
-          document,
+          documents: documentRecords,
           extracted: {
             ...extracted,
             confidence: parseFloat(extracted.confidence || "0"),
