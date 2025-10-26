@@ -13,7 +13,7 @@ import {
   insertExtractedDataSchema,
   insertSuggestedActionSchema
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import multer from "multer";
 import { analyzeDocument, analyzeMultipleDocuments, chatWithTender } from "./gemini";
 import { uploadFile, getFileUrl, deleteFile } from "./objectStorage";
@@ -75,12 +75,17 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   
-  app.get("/api/cases", isAuthenticated, async (_req: Request, res: Response) => {
+  app.get("/api/cases", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const allCases = await db.select().from(cases).orderBy(desc(cases.createdAt));
+      const userId = req.userId!;
+      const userCases = await db
+        .select()
+        .from(cases)
+        .where(eq(cases.userId, userId))
+        .orderBy(desc(cases.createdAt));
       
       const casesWithCounts = await Promise.all(
-        allCases.map(async (c) => {
+        userCases.map(async (c) => {
           const docs = await db.select().from(documents).where(eq(documents.caseId, c.id));
           const actions = await db
             .select()
@@ -112,8 +117,12 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/cases", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const data = insertCaseSchema.parse(req.body);
-      const [newCase] = await db.insert(cases).values(data).returning();
+      const [newCase] = await db
+        .insert(cases)
+        .values({ ...data, userId })
+        .returning();
       res.json(newCase);
     } catch (error: any) {
       console.error("Error creating case:", error);
@@ -123,7 +132,17 @@ export function registerRoutes(app: Express): Server {
 
   app.delete("/api/cases/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const caseId = parseInt(req.params.id);
+      
+      const [caseToDelete] = await db
+        .select()
+        .from(cases)
+        .where(eq(cases.id, caseId));
+      
+      if (!caseToDelete || caseToDelete.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+      }
       
       const caseDocuments = await db
         .select()
@@ -144,7 +163,18 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/cases/:id/messages", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const caseId = parseInt(req.params.id);
+      
+      const [caseRecord] = await db
+        .select()
+        .from(cases)
+        .where(eq(cases.id, caseId));
+      
+      if (!caseRecord || caseRecord.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      
       const messages = await db
         .select()
         .from(chatMessages)
@@ -160,7 +190,18 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/cases/:id/messages", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const caseId = parseInt(req.params.id);
+      
+      const [caseRecord] = await db
+        .select()
+        .from(cases)
+        .where(eq(cases.id, caseId));
+      
+      if (!caseRecord || caseRecord.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      
       const data = insertChatMessageSchema.parse({ ...req.body, caseId });
       const [message] = await db.insert(chatMessages).values(data).returning();
 
@@ -192,7 +233,17 @@ export function registerRoutes(app: Express): Server {
     upload.array("files"),
     async (req: Request, res: Response) => {
       try {
+        const userId = req.userId!;
         const caseId = parseInt(req.params.id);
+        
+        const [caseRecord] = await db
+          .select()
+          .from(cases)
+          .where(eq(cases.id, caseId));
+        
+        if (!caseRecord || caseRecord.userId !== userId) {
+          return res.status(404).json({ error: "Case not found" });
+        }
         
         if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
           return res.status(400).json({ error: "No files uploaded" });
@@ -330,7 +381,18 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/cases/:id/extracted-data", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const caseId = parseInt(req.params.id);
+      
+      const [caseRecord] = await db
+        .select()
+        .from(cases)
+        .where(eq(cases.id, caseId));
+      
+      if (!caseRecord || caseRecord.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      
       const data = await db
         .select({
           extracted: extractedData,
@@ -350,7 +412,18 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/cases/:id/actions", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const caseId = parseInt(req.params.id);
+      
+      const [caseRecord] = await db
+        .select()
+        .from(cases)
+        .where(eq(cases.id, caseId));
+      
+      if (!caseRecord || caseRecord.userId !== userId) {
+        return res.status(404).json({ error: "Case not found" });
+      }
+      
       const actions = await db
         .select({
           action: suggestedActions,
@@ -412,8 +485,9 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/approvals", isAuthenticated, async (_req: Request, res: Response) => {
+  app.get("/api/approvals", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const approvedActions = await db
         .select({
           action: suggestedActions,
@@ -425,7 +499,10 @@ export function registerRoutes(app: Express): Server {
         .innerJoin(extractedData, eq(suggestedActions.extractedDataId, extractedData.id))
         .innerJoin(documents, eq(extractedData.documentId, documents.id))
         .innerJoin(cases, eq(documents.caseId, cases.id))
-        .where(eq(suggestedActions.status, "approved"))
+        .where(and(
+          eq(suggestedActions.status, "approved"),
+          eq(cases.userId, userId)
+        ))
         .orderBy(desc(suggestedActions.updatedAt));
       
       res.json(approvedActions);
@@ -437,6 +514,7 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/deadlines", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      const userId = req.userId!;
       const allExtractedData = await db
         .select({
           extracted: extractedData,
@@ -445,7 +523,8 @@ export function registerRoutes(app: Express): Server {
         })
         .from(extractedData)
         .innerJoin(documents, eq(extractedData.documentId, documents.id))
-        .innerJoin(cases, eq(documents.caseId, cases.id));
+        .innerJoin(cases, eq(documents.caseId, cases.id))
+        .where(eq(cases.userId, userId));
       
       const deadlinesWithCases = allExtractedData.flatMap((item) => {
         const deadlines = item.extracted.deadlines as Array<{ date: string; description: string; priority: "high" | "medium" | "low" }> | null;

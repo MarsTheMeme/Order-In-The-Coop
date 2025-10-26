@@ -25,6 +25,7 @@ export const users = pgTable("users", {
 
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   caseNumber: text("case_number").notNull(),
   status: text("status").notNull().default("active"),
@@ -75,6 +76,7 @@ export const suggestedActions = pgTable("suggested_actions", {
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 
