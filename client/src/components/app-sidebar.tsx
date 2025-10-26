@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { Settings, Plus, Search, Trash2 } from "lucide-react";
+import { LogOut, Plus, Search, Trash2 } from "lucide-react";
 import chickenLogo from "@assets/NEWChickenlogo_1761424521018.png";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +51,23 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [caseToDelete, setCaseToDelete] = useState<CaseItem | null>(null);
+  const { toast } = useToast();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout", undefined);
+    },
+    onSuccess: () => {
+      window.location.href = "/";
+    },
+    onError: () => {
+      toast({
+        title: "Logout failed",
+        description: "Failed to logout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const filteredCases = cases.filter((caseItem) =>
     caseItem.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -187,9 +207,13 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
       <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton data-testid="link-settings">
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
+            <SidebarMenuButton 
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>{logoutMutation.isPending ? "Logging out..." : "Logout"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
