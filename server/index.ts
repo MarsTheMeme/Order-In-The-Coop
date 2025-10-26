@@ -17,6 +17,9 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
+// Trust proxy to recognize HTTPS in production (required for secure cookies)
+app.set("trust proxy", 1);
+
 configureSession(app);
 
 app.use((req, res, next) => {
