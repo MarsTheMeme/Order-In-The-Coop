@@ -17,6 +17,7 @@ import { eq, desc } from "drizzle-orm";
 import multer from "multer";
 import { analyzeDocument, analyzeMultipleDocuments, chatWithTender } from "./gemini";
 import { uploadFile, getFileUrl, deleteFile } from "./objectStorage";
+import { isAuthenticated } from "./auth";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 
@@ -74,7 +75,7 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   
-  app.get("/api/cases", async (_req: Request, res: Response) => {
+  app.get("/api/cases", isAuthenticated, async (_req: Request, res: Response) => {
     try {
       const allCases = await db.select().from(cases).orderBy(desc(cases.createdAt));
       
@@ -109,7 +110,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/cases", async (req: Request, res: Response) => {
+  app.post("/api/cases", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const data = insertCaseSchema.parse(req.body);
       const [newCase] = await db.insert(cases).values(data).returning();
@@ -120,7 +121,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/cases/:id", async (req: Request, res: Response) => {
+  app.delete("/api/cases/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const caseId = parseInt(req.params.id);
       
@@ -141,7 +142,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/cases/:id/messages", async (req: Request, res: Response) => {
+  app.get("/api/cases/:id/messages", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const caseId = parseInt(req.params.id);
       const messages = await db
@@ -157,7 +158,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/cases/:id/messages", async (req: Request, res: Response) => {
+  app.post("/api/cases/:id/messages", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const caseId = parseInt(req.params.id);
       const data = insertChatMessageSchema.parse({ ...req.body, caseId });
@@ -187,6 +188,7 @@ export function registerRoutes(app: Express): Server {
 
   app.post(
     "/api/cases/:id/documents",
+    isAuthenticated,
     upload.array("files"),
     async (req: Request, res: Response) => {
       try {
@@ -326,7 +328,7 @@ export function registerRoutes(app: Express): Server {
     }
   );
 
-  app.get("/api/cases/:id/extracted-data", async (req: Request, res: Response) => {
+  app.get("/api/cases/:id/extracted-data", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const caseId = parseInt(req.params.id);
       const data = await db
@@ -346,7 +348,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/cases/:id/actions", async (req: Request, res: Response) => {
+  app.get("/api/cases/:id/actions", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const caseId = parseInt(req.params.id);
       const actions = await db
@@ -368,7 +370,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/actions/:id", async (req: Request, res: Response) => {
+  app.patch("/api/actions/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const actionId = parseInt(req.params.id);
       const { status } = req.body;
@@ -390,7 +392,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/actions/:id", async (req: Request, res: Response) => {
+  app.delete("/api/actions/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const actionId = parseInt(req.params.id);
 
@@ -410,7 +412,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/approvals", async (_req: Request, res: Response) => {
+  app.get("/api/approvals", isAuthenticated, async (_req: Request, res: Response) => {
     try {
       const approvedActions = await db
         .select({
@@ -433,7 +435,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/deadlines", async (_req: Request, res: Response) => {
+  app.get("/api/deadlines", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const allExtractedData = await db
         .select({

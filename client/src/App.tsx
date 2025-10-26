@@ -7,9 +7,11 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import ChatPage from "@/pages/ChatPage";
+import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/not-found";
 import { NewCaseDialog } from "@/components/NewCaseDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 
 function Router({ 
@@ -48,9 +50,25 @@ function Router({
 }
 
 function AppContent() {
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const [activeCase, setActiveCase] = useState<string | null>(null);
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
   const { toast } = useToast();
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => window.location.reload()} />;
+  }
 
   const { data: cases = [] } = useQuery<
     Array<{
