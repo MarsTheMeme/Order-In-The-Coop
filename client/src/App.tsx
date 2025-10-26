@@ -139,7 +139,7 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage onLogin={() => window.location.reload()} />;
+    return <LoginPage />;
   }
 
   const currentCase = cases.find(c => c.id === activeCase);

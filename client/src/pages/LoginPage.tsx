@@ -14,11 +14,7 @@ import chickenLogo from "@assets/tender-removebg-preview_1761448977377.png";
 import ShinyText from "@/components/ShinyText";
 import SplitText from "@/components/SplitText";
 
-interface LoginPageProps {
-  onLogin: () => void;
-}
-
-export default function LoginPage({ onLogin }: LoginPageProps) {
+export default function LoginPage() {
   const [loginData, setLoginData] = useState({
     username: "",
     password: "",
@@ -36,14 +32,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       return await apiRequest("POST", "/api/auth/login", credentials);
     },
     onSuccess: async () => {
-      queryClient.clear();
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
       toast({
         title: "Welcome back!",
         description: "Successfully signed in to Order In The Coop.",
       });
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: () => {
       toast({
@@ -59,14 +52,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       return await apiRequest("POST", "/api/auth/register", userData);
     },
     onSuccess: async () => {
-      queryClient.clear();
-      setTimeout(() => {
-        window.location.reload();
-      }, 200);
       toast({
         title: "Account created!",
         description: "Welcome to Order In The Coop.",
       });
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: (error: any) => {
       toast({
