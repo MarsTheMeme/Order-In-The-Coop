@@ -1,7 +1,7 @@
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import chickenAvatar from "@assets/NEWChickenlogo_1761424521018.png";
+import chickenAvatar from "@assets/tender-removebg-preview_1761448977377.png";
 
 export interface ChatMessageProps {
   role: "user" | "assistant";
