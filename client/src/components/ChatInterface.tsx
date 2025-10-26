@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ChatMessage, type ChatMessageProps } from "./ChatMessage";
-import chickenAvatar from "@assets/NEWChickenlogo_1761424521018.png";
+import chickenAvatar from "@assets/tender-removebg-preview_1761448977377.png";
 
 interface AttachedDocument {
   id: string;

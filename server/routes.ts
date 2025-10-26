@@ -15,7 +15,7 @@ import {
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import multer from "multer";
-import { analyzeDocument, analyzeMultipleDocuments, chatWithTender } from "./gemini";
+import { analyzeDocument, analyzeMultipleDocuments, chatWithTender, answerCaseQuestion, type CaseContext } from "./gemini";
 import { uploadFile, getFileUrl, deleteFile } from "./objectStorage";
 import { isAuthenticated } from "./auth";
 import mammoth from "mammoth";
@@ -206,7 +206,52 @@ export function registerRoutes(app: Express): Server {
       const [message] = await db.insert(chatMessages).values(data).returning();
 
       if (message.role === "user" && !message.content.toLowerCase().includes("uploaded:")) {
-        const aiResponse = await chatWithTender(message.content);
+        // Fetch case context for intelligent responses
+        const caseDocuments = await db
+          .select()
+          .from(documents)
+          .where(eq(documents.caseId, caseId))
+          .orderBy(desc(documents.uploadedAt));
+
+        const caseExtractedData = await db
+          .select({
+            id: extractedData.id,
+            caseNumber: extractedData.caseNumber,
+            parties: extractedData.parties,
+            deadlines: extractedData.deadlines,
+            keyFacts: extractedData.keyFacts,
+            documentId: extractedData.documentId,
+            fileName: documents.fileName,
+          })
+          .from(extractedData)
+          .innerJoin(documents, eq(extractedData.documentId, documents.id))
+          .where(eq(documents.caseId, caseId))
+          .orderBy(desc(extractedData.extractedAt));
+
+        const caseContext: CaseContext = {
+          caseName: caseRecord.name,
+          caseNumber: caseRecord.caseNumber,
+          documents: caseDocuments.map(doc => ({
+            fileName: doc.fileName,
+            fileType: doc.fileType,
+            uploadedAt: doc.uploadedAt,
+          })),
+          extractedData: caseExtractedData.map(data => ({
+            caseNumber: data.caseNumber,
+            parties: data.parties || [],
+            deadlines: data.deadlines || [],
+            keyFacts: data.keyFacts || [],
+            documentFileName: data.fileName,
+          })),
+        };
+
+        let aiResponse: string;
+        if (caseContext.documents.length === 0) {
+          aiResponse = await chatWithTender(message.content);
+        } else {
+          aiResponse = await answerCaseQuestion(message.content, caseContext);
+        }
+        
         const [aiMessage] = await db
           .insert(chatMessages)
           .values({

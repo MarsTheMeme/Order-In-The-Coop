@@ -265,3 +265,69 @@ Respond helpfully and professionally. If the user asks about document analysis, 
   
   return result.text || "";
 }
+
+export interface CaseContext {
+  caseName: string;
+  caseNumber: string;
+  documents: Array<{
+    fileName: string;
+    fileType: string;
+    uploadedAt: Date;
+  }>;
+  extractedData: Array<{
+    caseNumber?: string | null;
+    parties: string[];
+    deadlines: Array<{
+      date: string;
+      description: string;
+      priority: string;
+    }>;
+    keyFacts: string[];
+    documentFileName: string;
+  }>;
+}
+
+export async function answerCaseQuestion(
+  question: string,
+  caseContext: CaseContext
+): Promise<string> {
+  const documentsInfo = caseContext.documents
+    .map((d, i) => `${i + 1}. ${d.fileName} (${d.fileType})`)
+    .join('\n');
+
+  const extractedInfo = caseContext.extractedData.map(data => {
+    const parts = [
+      `Document: ${data.documentFileName}`,
+      data.caseNumber ? `Case Number: ${data.caseNumber}` : null,
+      data.parties.length > 0 ? `Parties: ${data.parties.join(', ')}` : null,
+      data.deadlines.length > 0 
+        ? `Deadlines:\n${data.deadlines.map(d => `  - ${d.description} (${d.date}) [${d.priority} priority]`).join('\n')}`
+        : null,
+      data.keyFacts.length > 0 
+        ? `Key Facts:\n${data.keyFacts.map(f => `  - ${f}`).join('\n')}`
+        : null
+    ];
+    return parts.filter(Boolean).join('\n');
+  }).join('\n\n---\n\n');
+
+  const prompt = `You are Tender, an AI legal assistant helping with case: "${caseContext.caseName}" (${caseContext.caseNumber}).
+
+CASE DOCUMENTS (${caseContext.documents.length} total):
+${documentsInfo}
+
+EXTRACTED INFORMATION FROM DOCUMENTS:
+${extractedInfo || 'No documents have been analyzed yet.'}
+
+USER QUESTION: ${question}
+
+Based on the case documents and extracted information above, provide a helpful, specific answer to the user's question. Reference specific documents, parties, dates, or facts when relevant. If the information needed to answer isn't in the case documents, say so clearly and suggest what additional documents might help.
+
+Keep your response conversational, professional, and actionable. You're speaking directly to the legal team working on this case.`;
+
+  const result = await genAI.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+  
+  return result.text || "I apologize, but I couldn't generate a response. Please try rephrasing your question.";
+}

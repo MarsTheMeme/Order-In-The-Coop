@@ -1,0 +1,6 @@
+Case: Follow-Up Test Case
+  Parties: Alice Plaintiff; Bob Defendant
+  Deadlines:
+- Motion due: 2025-07-14
+- Response due: 2025-08-01
+Key Facts: Plaintiff was injured on 2024-12-01.
