@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { configureSession, setupAuthRoutes } from "./auth";
 
 const app = express();
 
@@ -15,6 +16,8 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false }));
+
+configureSession(app);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -47,6 +50,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  setupAuthRoutes(app);
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
