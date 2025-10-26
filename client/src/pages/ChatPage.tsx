@@ -332,14 +332,16 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
       </Tabs>
 
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Upload Case Documents</DialogTitle>
             <DialogDescription>
               Upload transcripts, emails, or other case documents for AI analysis by Tender
             </DialogDescription>
           </DialogHeader>
-          <FileUploadZone onFilesSelected={handleFilesSelected} />
+          <div className="overflow-y-auto flex-1 pr-2">
+            <FileUploadZone onFilesSelected={handleFilesSelected} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

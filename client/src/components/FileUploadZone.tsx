@@ -129,7 +129,7 @@ export function FileUploadZone({ onFilesSelected, accept = ".pdf,.docx,.txt,.png
         <div className="space-y-4">
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Selected Files</h4>
-            <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+            <div className="space-y-2">
               {uploadedFiles.map((file) => (
                 <Card key={file.id} className="p-3" data-testid={`file-item-${file.id}`}>
                   <div className="flex items-center justify-between gap-3">
