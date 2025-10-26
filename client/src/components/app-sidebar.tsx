@@ -153,19 +153,27 @@ export function AppSidebar({ cases, activeCase, onCaseSelect, onNewCase, onDelet
                           </span>
                           <span>{caseItem.documentCount} docs</span>
                         </div>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2 flex-shrink-0 group/delete"
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          className="h-6 w-6 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity hover-elevate active-elevate-2 flex-shrink-0 group/delete rounded-md cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
                             setCaseToDelete(caseItem);
                             setDeleteDialogOpen(true);
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setCaseToDelete(caseItem);
+                              setDeleteDialogOpen(true);
+                            }
+                          }}
                           data-testid={`button-delete-case-${caseItem.id}`}
                         >
                           <Trash2 className="w-3.5 h-3.5 text-destructive group-hover/delete:text-red-600 dark:group-hover/delete:text-red-500 transition-colors" />
-                        </Button>
+                        </div>
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
