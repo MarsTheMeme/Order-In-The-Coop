@@ -86,7 +86,7 @@ export default function ChatPage({ caseId, caseName }: ChatPageProps) {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest(`/api/cases/${caseId}/messages`, "POST", {
+      return apiRequest("POST", `/api/cases/${caseId}/messages`, {
         role: "user",
         content,
         isAnalysis: false,
