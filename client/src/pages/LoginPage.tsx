@@ -9,6 +9,7 @@ import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RegisterUser, LoginUser } from "@shared/schema";
 import { Scale, FileText } from "lucide-react";
+import backgroundImage from "@assets/9285857_1761446302544.jpg";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -86,18 +87,30 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div 
+        className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70"
+        aria-hidden="true"
+      />
+      <div className="w-full max-w-md space-y-8 relative z-10">
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center">
-              <Scale className="w-7 h-7 text-primary" />
+            <div className="w-12 h-12 rounded-md bg-white/10 backdrop-blur-sm flex items-center justify-center">
+              <Scale className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-3xl font-semibold" data-testid="text-app-title">
+            <h1 className="text-3xl font-semibold text-white" data-testid="text-app-title">
               Order In The Coop
             </h1>
           </div>
-          <p className="text-muted-foreground text-base">
+          <p className="text-white/80 text-base">
             AI-powered legal assistant for plaintiff legal teams
           </p>
         </div>
@@ -225,7 +238,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           </CardContent>
         </Card>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-white/70">
           <p className="flex items-center justify-center gap-2">
             <FileText className="w-4 h-4" />
             Document analysis powered by Google Gemini AI
