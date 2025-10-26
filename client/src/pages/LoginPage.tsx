@@ -11,6 +11,7 @@ import type { RegisterUser, LoginUser } from "@shared/schema";
 import { FileText } from "lucide-react";
 import backgroundImage from "@assets/9285857_1761446302544.jpg";
 import chickenLogo from "@assets/tender-removebg-preview_1761446543382.png";
+import ShinyText from "@/components/ShinyText";
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -116,9 +117,14 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               Order In The Coop
             </h1>
           </div>
-          <p className="text-white/80 text-base">
-            AI-powered legal assistant for plaintiff legal teams
-          </p>
+          <div className="text-base flex justify-center">
+            <ShinyText 
+              text="AI-powered legal assistant for plaintiff legal teams" 
+              disabled={false} 
+              speed={3} 
+              className="text-white/80"
+            />
+          </div>
         </div>
 
         <Card data-testid="card-auth">
