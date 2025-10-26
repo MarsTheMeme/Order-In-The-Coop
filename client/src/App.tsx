@@ -55,21 +55,6 @@ function AppContent() {
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
   const { toast } = useToast();
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={() => window.location.reload()} />;
-  }
-
   const { data: cases = [] } = useQuery<
     Array<{
       id: string;
@@ -80,13 +65,14 @@ function AppContent() {
     }>
   >({
     queryKey: ["/api/cases"],
+    enabled: isAuthenticated,
   });
 
   useEffect(() => {
-    if (activeCase === null && cases.length > 0) {
+    if (isAuthenticated && activeCase === null && cases.length > 0) {
       setActiveCase(cases[0].id);
     }
-  }, [activeCase, cases]);
+  }, [isAuthenticated, activeCase, cases]);
 
   const createCaseMutation = useMutation({
     mutationFn: async (caseName: string) => {
@@ -140,6 +126,21 @@ function AppContent() {
       });
     },
   });
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => window.location.reload()} />;
+  }
 
   const currentCase = cases.find(c => c.id === activeCase);
   const caseName = currentCase?.name || "Loading...";
