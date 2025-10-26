@@ -12,8 +12,8 @@ Preferred communication style: Simple, everyday language.
 - **Technology Stack**: React with TypeScript, Vite, Wouter for routing, TanStack Query for server state.
 - **UI Framework**: Shadcn/ui (Radix UI base), Tailwind CSS for styling, custom light/dark mode color scheme, Inter and JetBrains Mono typography.
 - **Design System**: Linear/Notion-inspired professional aesthetic, document-centric layout with fixed sidebar (280px), main content (max-w-7xl), and collapsible right panel (360px).
-- **Key Components**: ChatInterface, FileUploadZone, ExtractedDataCard, ActionApprovalCard, ApprovalsTab, DeadlinesTab (calendar view), AppSidebar (case navigation, search), NewCaseDialog.
-- **Navigation & Search**: Sidebar search for cases with real-time filtering and highlighting. Tab-based navigation for Chat, Documents (pending actions), Approvals (approved actions), and Deadlines (calendar).
+- **Key Components**: ChatInterface, FileUploadZone, ExtractedDataCard, ActionApprovalCard, ApprovalsTab, DeadlinesTab (calendar view), AppSidebar (case navigation, search, logout), NewCaseDialog.
+- **Navigation & Search**: Sidebar search for cases with real-time filtering and highlighting. Tab-based navigation for Chat, Documents (pending actions), Approvals (approved actions), and Deadlines (calendar). Logout button in sidebar footer.
 - **Case Management**: Create new cases, delete cases (with CASCADE deletion of all associated data), and display empty states.
 
 ### Backend
@@ -26,6 +26,7 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 - **Database**: PostgreSQL via Neon serverless driver, Drizzle ORM for type-safe queries and schema.
 - **Schema Design**: `users`, `session` (for authentication), `cases`, `documents`, `chatMessages`, `extractedData`, `suggestedActions` tables with `ON DELETE CASCADE` for data integrity.
+- **Multi-Tenant Data Isolation**: Cases table includes `userId` foreign key with NOT NULL constraint. All case queries are scoped by authenticated user ID. Users can only access their own cases, documents, messages, and actions.
 - **File Storage**: Local filesystem storage (`.private/documents`) with timestamp-prefixed filenames.
 
 ### Authentication & Security
