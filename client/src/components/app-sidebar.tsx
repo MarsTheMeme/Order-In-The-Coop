@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LogOut, Plus, Search, Trash2 } from "lucide-react";
-import chickenLogo from "@assets/NEWChickenlogo_1761424521018.png";
+import chickenLogo from "@assets/tender-removebg-preview_1761448977377.png";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
