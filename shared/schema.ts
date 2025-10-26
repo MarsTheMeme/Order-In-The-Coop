@@ -1,6 +1,27 @@
-import { pgTable, text, serial, timestamp, integer, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, jsonb, boolean, varchar, index } from "drizzle-orm/pg-core";
+import { sql } from 'drizzle-orm';
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: varchar("username").unique().notNull(),
+  email: varchar("email"),
+  passwordHash: varchar("password_hash").notNull(),
+  fullName: varchar("full_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
@@ -92,3 +113,26 @@ export type InsertExtractedData = z.infer<typeof insertExtractedDataSchema>;
 
 export type SuggestedAction = typeof suggestedActions.$inferSelect;
 export type InsertSuggestedAction = z.infer<typeof insertSuggestedActionSchema>;
+
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const registerSchema = z.object({
+  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+  fullName: z.string().min(1).max(100),
+  email: z.string().email().optional(),
+  password: z.string().min(6).max(128),
+});
+
+export const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type RegisterUser = z.infer<typeof registerSchema>;
+export type LoginUser = z.infer<typeof loginSchema>;
+export type User = typeof users.$inferSelect;
