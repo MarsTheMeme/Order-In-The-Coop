@@ -145,61 +145,49 @@ export function setupAuthRoutes(app: Express) {
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
-      console.log("🔐 Login attempt received:", { username: req.body?.username });
-      
       const validatedData = loginSchema.parse(req.body);
-      console.log("✅ Login data validated");
 
       const user = await storage.getUserByUsername(
         validatedData.username.toLowerCase(),
       );
       if (!user) {
-        console.log("❌ User not found:", validatedData.username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      console.log("✅ User found:", user.username);
 
       const isValidPassword = await verifyPassword(
         user.passwordHash,
         validatedData.password,
       );
       if (!isValidPassword) {
-        console.log("❌ Invalid password for user:", validatedData.username);
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      console.log("✅ Password verified");
 
       req.session.regenerate((err) => {
         if (err) {
-          console.error("❌ Session regeneration error:", err);
+          console.error("Session regeneration error:", err);
           return res.status(500).json({ message: "Login failed" });
         }
-        console.log("✅ Session regenerated");
 
         (req.session as any).userId = user.id;
-        console.log("✅ User ID set in session:", user.id);
 
         req.session.save((saveErr) => {
           if (saveErr) {
-            console.error("❌ Session save error:", saveErr);
+            console.error("Session save error:", saveErr);
             return res.status(500).json({ message: "Login failed" });
           }
-          console.log("✅ Session saved successfully");
 
           const { passwordHash: _, ...userWithoutPassword } = user;
-          console.log("🎉 Login successful for:", user.username);
           res.json(userWithoutPassword);
         });
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error("❌ Validation error:", error.errors);
         return res.status(400).json({
           message: "Invalid login data",
           errors: error.errors,
         });
       }
-      console.error("❌ Login error:", error);
+      console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
     }
   });

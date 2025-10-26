@@ -25,8 +25,17 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL via Neon serverless driver, Drizzle ORM for type-safe queries and schema.
-- **Schema Design**: `cases`, `documents`, `chatMessages`, `extractedData`, `suggestedActions` tables with `ON DELETE CASCADE` for data integrity.
+- **Schema Design**: `users`, `session` (for authentication), `cases`, `documents`, `chatMessages`, `extractedData`, `suggestedActions` tables with `ON DELETE CASCADE` for data integrity.
 - **File Storage**: Local filesystem storage (`.private/documents`) with timestamp-prefixed filenames.
+
+### Authentication & Security
+- **Authentication System**: Session-based authentication with express-session and connect-pg-simple for PostgreSQL session storage.
+- **Password Security**: Argon2id hashing algorithm with strong parameters (memory cost: 65536 KB, time cost: 3, parallelism: 4).
+- **Session Security**: HttpOnly cookies (prevents XSS), Secure flag in production (HTTPS only), SameSite=lax (CSRF protection), session regeneration on login/register (prevents session fixation).
+- **Session Configuration**: 24-hour session lifetime with sliding expiration, 1-hour cookie age, rolling refresh on activity.
+- **Protected Endpoints**: All API routes (except auth endpoints) require authentication via isAuthenticated middleware.
+- **Frontend Auth**: useAuth hook manages authentication state, LoginPage component handles login/registration, automatic redirect to login when unauthenticated.
+- **User Registration**: Username uniqueness enforced, full name and email optional, minimum password length: 6 characters.
 
 ### Human-in-the-Loop Workflow
 - **Design Principle**: AI suggestions require explicit human approval.
