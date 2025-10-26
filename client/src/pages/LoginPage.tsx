@@ -10,7 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RegisterUser, LoginUser } from "@shared/schema";
 import { FileText } from "lucide-react";
 import backgroundImage from "@assets/9285857_1761446302544.jpg";
-import chickenLogo from "@assets/NEWChickenlogo_1761446394515.png";
+import chickenLogo from "@assets/tender-removebg-preview_1761446543382.png";
 
 interface LoginPageProps {
   onLogin: () => void;
